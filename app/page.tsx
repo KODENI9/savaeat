@@ -6,17 +6,7 @@ import Wrapper from "./components/Wrapper";
 import getDistanceKm from "@/src/utils/distance";
 import ProtectedPage from "./components/ProtectedPage";
 import Image from "next/image";
-export default function RecherchePage() {
-  const [search, setSearch] = useState("");
-  const [radiusKm, setRadiusKm] = useState(5);
-  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [vendors, setVendors] = useState<(Vendor & { distanceKm?: number })[]>([]);
-
-  const router = useRouter();
-
-  const fakeVendors: (Vendor & { distanceKm?: number })[] = [
+const fakeVendors: (Vendor & { distanceKm?: number })[] = [
   {
     id: "1",
     name: "Awa",
@@ -66,6 +56,17 @@ export default function RecherchePage() {
     createdAt: Date.now(),
   },
 ];
+export default function RecherchePage() {
+  const [search, setSearch] = useState("");
+  const [radiusKm, setRadiusKm] = useState(5);
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [vendors, setVendors] = useState<(Vendor & { distanceKm?: number })[]>([]);
+
+  const router = useRouter();
+
+  
 
 
   // 📍 Récupération position utilisateur
