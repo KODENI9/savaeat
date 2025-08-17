@@ -5,7 +5,7 @@ import { Vendor } from "@/src/types";
 import Wrapper from "./components/Wrapper";
 import getDistanceKm from "@/src/utils/distance";
 import ProtectedPage from "./components/ProtectedPage";
-
+import Image from "next/image";
 export default function RecherchePage() {
   const [search, setSearch] = useState("");
   const [radiusKm, setRadiusKm] = useState(5);
@@ -240,57 +240,63 @@ export default function RecherchePage() {
               >
                 {/* Image bannière si dispo */}
                 {v.bannerImageUrl && (
-                  <img
+                  <Image
                     src={v.bannerImageUrl}
                     alt={`Bannière de ${v.shopName}`}
+                    width={600}
+                    height={96}
                     className="w-full h-24 object-cover"
+                    style={{ objectFit: "cover" }}
+                    priority={false}
                   />
                 )}
 
                 <div className="flex gap-4 p-5 items-center">
-                  <img
-                    src={v.profileImageUrl}
-                    alt={v.name}
-                    className="w-24 h-24 rounded-xl object-cover ring-1 ring-gray-200"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src =
-                        "/placeholder.png";
-                    }}
+                  <Image
+                  src={v.profileImageUrl}
+                  alt={v.name}
+                  width={96}
+                  height={96}
+                  className="w-24 h-24 rounded-xl object-cover ring-1 ring-gray-200"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src =
+                    "/placeholder.png";
+                  }}
                   />
 
                   <div className="flex-1">
-                    {/* Nom + Adresse + Étoiles */}
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-bold text-lg text-gray-800">
-                          {v.name}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {v.address || "Adresse non renseignée"}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="flex items-center gap-1 text-yellow-500 text-sm font-semibold">
-                          ⭐ {v.averageRating.toFixed(1)}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          {v.ratingsCount} avis
-                        </div>
-                      </div>
+                  {/* Nom + Adresse + Étoiles */}
+                  <div className="flex justify-between items-start">
+                    <div>
+                    <h3 className="font-bold text-lg text-gray-800">
+                      {v.name}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {v.address || "Adresse non renseignée"}
+                    </p>
                     </div>
+                    <div className="text-right">
+                    <div className="flex items-center gap-1 text-yellow-500 text-sm font-semibold">
+                      ⭐ {v.averageRating.toFixed(1)}
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {v.ratingsCount} avis
+                    </div>
+                    </div>
+                  </div>
 
-                    {/* Distance + Bouton */}
-                    <div className="mt-3 flex items-center justify-between">
-                      <span className="text-sm text-gray-600">
-                        {v.distanceKm?.toFixed(2)} km
-                      </span>
-                      <button
-                        className="btn btn-sm btn-accent rounded-full px-4 shadow-md hover:shadow-lg transition"
-                        onClick={() => router.push(`/vendeuses/${v.id}`)}
-                      >
-                        Voir
-                      </button>
-                    </div>
+                  {/* Distance + Bouton */}
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-sm text-gray-600">
+                    {v.distanceKm?.toFixed(2)} km
+                    </span>
+                    <button
+                    className="btn btn-sm btn-accent rounded-full px-4 shadow-md hover:shadow-lg transition"
+                    onClick={() => router.push(`/vendeuses/${v.id}`)}
+                    >
+                    Voir
+                    </button>
+                  </div>
                   </div>
                 </div>
               </div>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/src/firebase/firebase";
-
+import Image from "next/image";
 type Role = "client" | "vendor";
 
 const MAX_IMAGE_BYTES = 1_000_000; // ~1MB
@@ -45,25 +45,34 @@ export default function RegisterPage() {
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
 
-  const pickProfile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    try {
-      setProfileImageUrl(await fileToDataURL(f));
-    } catch (err: any) {
-      setError(err.message || "Erreur image");
+ const pickProfile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  try {
+    setProfileImageUrl(await fileToDataURL(f));
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      setError(err.message);
+    } else {
+      setError("Erreur image");
     }
-  };
+  }
+};
 
-  const pickBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    try {
-      setBannerImageUrl(await fileToDataURL(f));
-    } catch (err: any) {
-      setError(err.message || "Erreur image");
+const pickBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const f = e.target.files?.[0];
+  if (!f) return;
+  try {
+    setBannerImageUrl(await fileToDataURL(f));
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      setError(err.message);
+    } else {
+      setError("Erreur image");
     }
-  };
+  }
+};
+
 
   const detectLocation = () => {
     if (!("geolocation" in navigator)) {
@@ -110,50 +119,53 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      const uid = cred.user.uid;
-      const createdAt = Date.now();
+try {
+  const cred = await createUserWithEmailAndPassword(auth, email, password);
+  const uid = cred.user.uid;
+  const createdAt = Date.now();
 
-      if (role === "vendor") {
-        const vendorDoc = {
-          id: uid,
-          name,
-          email,
-          profileImageUrl,
-          bannerImageUrl,
-          shopName,
-          address,
-          latitude,
-          longitude,
-          phoneNumber,
-          likedByClients: [] as string[],
-          averageRating: 0,
-          ratingsCount: 0,
-          createdAt,
-        };
-        await setDoc(doc(db, "vendors", uid), vendorDoc);
-      } else {
-        const clientDoc = {
-          id: uid,
-          name,
-          email,
-          profileImageUrl,
-          bannerImageUrl,
-          favoriteVendorIds: [] as string[],
-          reviewIds: [] as string[],
-          createdAt,
-        };
-        await setDoc(doc(db, "clients", uid), clientDoc);
-      }
+  if (role === "vendor") {
+    const vendorDoc = {
+      id: uid,
+      name,
+      email,
+      profileImageUrl,
+      bannerImageUrl,
+      shopName,
+      address,
+      latitude,
+      longitude,
+      phoneNumber,
+      likedByClients: [] as string[],
+      averageRating: 0,
+      ratingsCount: 0,
+      createdAt,
+    };
+    await setDoc(doc(db, "vendors", uid), vendorDoc);
+  } else {
+    const clientDoc = {
+      id: uid,
+      name,
+      email,
+      profileImageUrl,
+      bannerImageUrl,
+      favoriteVendorIds: [] as string[],
+      reviewIds: [] as string[],
+      createdAt,
+    };
+    await setDoc(doc(db, "clients", uid), clientDoc);
+  }
 
-      router.push("/");
-    } catch (err: any) {
-      console.error(err);
-      setError("Erreur à l’inscription.");
-    } finally {
-      setLoading(false);
-    }
+  router.push("/");
+} catch (err: unknown) {
+  if (err instanceof Error) {
+    console.error(err.message);
+  }
+  setError("Erreur à l’inscription.");
+} finally {
+  setLoading(false);
+}
+
   };
 
   return (
@@ -210,27 +222,29 @@ export default function RegisterPage() {
           />
 
           {/* Images */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm mb-1">Photo de profil</label>
               <input type="file" accept="image/*" className="file-input file-input-bordered w-full"
-                     onChange={pickProfile} />
+                 onChange={pickProfile} />
               {profileImageUrl && (
-                <img src={profileImageUrl} alt="Profil" className="mt-2 h-24 w-24 rounded-lg object-cover border" />
+              <Image src={profileImageUrl} alt="Profil" width={96} height={96} 
+                   className="mt-2 rounded-lg object-cover border" />
               )}
             </div>
             <div>
               <label className="block text-sm mb-1">Bannière</label>
               <input type="file" accept="image/*" className="file-input file-input-bordered w-full"
-                     onChange={pickBanner} />
+                 onChange={pickBanner} />
               {bannerImageUrl && (
-                <img src={bannerImageUrl} alt="Bannière" className="mt-2 h-24 w-full rounded-lg object-cover border" />
+              <Image src={bannerImageUrl} alt="Bannière" width={800} height={96}
+                   className="mt-2 rounded-lg object-cover border" />
               )}
             </div>
-          </div>
+            </div>
 
-          {/* Vendor-only */}
-          {role === "vendor" && (
+            {/* Vendor-only */}
+            {role === "vendor" && (
             <>
               <input
                 className="input input-bordered w-full"

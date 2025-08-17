@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { AuthError, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/src/firebase/firebase";
 
 export default function LoginPage() {
@@ -18,10 +18,18 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push("/");
-    } catch (error: any) {
-      console.error(error);
-      alert("Email ou mot de passe incorrect");
-    } finally {
+    } catch (error: unknown) {
+  const err = error as AuthError;
+  console.error(err.code, err.message);
+
+  if (err.code === "auth/wrong-password") {
+    alert("Mot de passe incorrect");
+  } else if (err.code === "auth/user-not-found") {
+    alert("Utilisateur introuvable");
+  } else {
+    alert("Erreur : " + err.message);
+  }
+} finally {
       setLoading(false);
     }
   };

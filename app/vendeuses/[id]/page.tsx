@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { db, auth } from "@/src/firebase/firebase";
-import { doc, collection, query, where, onSnapshot } from "firebase/firestore";
+import { doc, collection, query, where, onSnapshot, Timestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { addReview } from "@/src/services/addReview.ts";
 import { _toggleLike } from "@/src/services/toggleLike";
-
+import Image from "next/image";
 
 type Vendor = {
   id: string;
@@ -32,7 +32,7 @@ type Review = {
   vendorId: string;
   rating: number;
   comment: string;
-  createdAt: any;
+  createdAt: Timestamp | Date;
 };
 
 export default function VendorProfilePage() {
@@ -74,24 +74,25 @@ export default function VendorProfilePage() {
     const reviewsQuery = query(collection(db, "reviews"), where("vendorId", "==", vendorId));
 
     const unsubVendor = onSnapshot(vendorRef, (snap) => {
-      if (snap.exists()) {
-        setVendor({
-          id: snap.id,
-          likedByClients: [],
-          averageRating: 0,
-          ratingsCount: 0,
-          ...(snap.data() as any),
-        });
-      } else {
-        setVendor(null);
-      }
+  if (snap.exists()) {
+    const data = snap.data() as Omit<Vendor, "id">; // ✅ typage fort
+    setVendor({
+      id: snap.id,
+      ...data,
     });
+  } else {
+    setVendor(null);
+  }
+});
 
-    const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
-      const list: Review[] = snap.docs.map((d) => ({ id: d.id, ...(d.data() as any) }));
-      setReviews(list);
-      setLoading(false);
-    });
+const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
+  const list: Review[] = snap.docs.map((d) => {
+    const data = d.data() as Omit<Review, "id">; // ✅ typage fort
+    return { id: d.id, ...data };
+  });
+  setReviews(list);
+  setLoading(false);
+});
 
     return () => {
       unsubVendor();
@@ -151,7 +152,13 @@ export default function VendorProfilePage() {
     <div className="max-w-3xl mx-auto p-4">
       {/* Bannière + Like */}
       <div className="relative w-full h-52 rounded-2xl overflow-hidden shadow-lg">
-        <img src={vendor.bannerImageUrl || "/banner-placeholder.jpg"} alt="Bannière" className="w-full h-full object-cover brightness-95" />
+        <Image
+          src={vendor.bannerImageUrl || "/banner-placeholder.jpg"}
+          alt="Bannière"
+          fill
+          className="object-cover brightness-95"
+          priority
+        />
         <button
           onClick={toggleLike}
           className={`absolute top-3 right-3 flex items-center gap-1 px-3 py-2 rounded-full shadow-md transition-all duration-200 
@@ -166,7 +173,13 @@ export default function VendorProfilePage() {
       {/* Profil */}
       <div className="flex items-center gap-4 -mt-12 px-3">
         <div className="relative">
-          <img src={vendor.profileImageUrl || "/placeholder.png"} alt={vendor.name} className="w-24 h-24 rounded-full ring-4 ring-white object-cover shadow-xl" />
+          <Image 
+            src={vendor.profileImageUrl || "/placeholder.png"} 
+            alt={vendor.name} 
+            width={96}
+            height={96}
+            className="rounded-full ring-4 ring-white object-cover shadow-xl" 
+          />
         </div>
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{vendor.shopName || vendor.name}</h1>
@@ -212,8 +225,8 @@ export default function VendorProfilePage() {
             {reviews
               .slice()
               .sort((a, b) => {
-                const ta = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : new Date(a.createdAt).getTime() || 0;
-                const tb = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : new Date(b.createdAt).getTime() || 0;
+                const ta = a.createdAt instanceof Timestamp ? a.createdAt.seconds * 1000 : new Date(a.createdAt).getTime() || 0;
+                const tb = b.createdAt instanceof Timestamp ? b.createdAt.seconds * 1000 : new Date(b.createdAt).getTime() || 0;
                 return tb - ta;
               })
               .map((r) => (
@@ -228,7 +241,7 @@ export default function VendorProfilePage() {
                       <div className="font-semibold">{r.clientName}</div>
                     </div>
                     <div className="text-xs text-gray-500">
-                      {r.createdAt?.seconds ? new Date(r.createdAt.seconds * 1000).toLocaleDateString() : new Date(r.createdAt).toLocaleDateString()}
+                      {r.createdAt instanceof Timestamp ? new Date(r.createdAt.seconds * 1000).toLocaleDateString() : new Date(r.createdAt).toLocaleDateString()}
                     </div>
                   </div>
                   <div className="text-yellow-500 text-sm mt-1">⭐ {r.rating}/5</div>
