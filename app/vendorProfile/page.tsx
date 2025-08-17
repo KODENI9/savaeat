@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/src/firebase/firebase";
 import { Vendor } from "@/src/types";
 import { getAuth } from "firebase/auth";
 import Wrapper from "../components/Wrapper";
-
+import Image from "next/image";
+ 
 export default function VendorProfilePage() {
   const auth = getAuth();
   const vendorId = auth.currentUser?.uid; 
@@ -69,14 +69,16 @@ export default function VendorProfilePage() {
   {/* Banner */}
   <div className="relative w-full h-52 rounded-2xl overflow-hidden shadow-md">
     {vendor.bannerImageUrl ? (
-      <img
-        src={vendor.bannerImageUrl}
-        alt="Bannière"
-        className="object-cover w-full h-full"
+      <Image
+      src={vendor.bannerImageUrl}
+      alt="Bannière"
+      fill
+      className="object-cover"
+      priority
       />
     ) : (
       <div className="w-full h-full bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center text-gray-400">
-        Ajouter une bannière
+      Ajouter une bannière
       </div>
     )}
     <input
@@ -91,10 +93,11 @@ export default function VendorProfilePage() {
   <div className="relative -mt-20 flex justify-center">
     <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
       {vendor.profileImageUrl ? (
-        <img
+        <Image
           src={vendor.profileImageUrl}
           alt="Profil"
-          className="object-cover w-full h-full"
+          fill
+          className="object-cover"
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
