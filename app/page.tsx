@@ -1,103 +1,304 @@
-import Image from "next/image";
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Vendor } from "@/src/types";
+import Wrapper from "./components/Wrapper";
+import getDistanceKm from "@/src/utils/distance";
+import ProtectedPage from "./components/ProtectedPage";
 
-export default function Home() {
+export default function RecherchePage() {
+  const [search, setSearch] = useState("");
+  const [radiusKm, setRadiusKm] = useState(5);
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [vendors, setVendors] = useState<(Vendor & { distanceKm?: number })[]>([]);
+
+  const router = useRouter();
+
+  const fakeVendors: (Vendor & { distanceKm?: number })[] = [
+  {
+    id: "1",
+    name: "Awa",
+    email: "awa@example.com",
+    profileImageUrl: "/placeholder.png",
+    bannerImageUrl: "",
+    shopName: "Boutique Awa",
+    address: "Lomé, Togo",
+    latitude: 6.1850,
+    longitude: 1.3520,
+    phoneNumber: "900000001",
+    likedByClients: [],
+    averageRating: 4.5,
+    ratingsCount: 12,
+    createdAt: Date.now(),
+  },
+  {
+    id: "2",
+    name: "Fatou",
+    email: "fatou@example.com",
+    profileImageUrl: "/placeholder.png",
+    bannerImageUrl: "",
+    shopName: "Boutique Fatou",
+    address: "Lomé, Togo",
+    latitude: 6.1870,
+    longitude: 1.3540,
+    phoneNumber: "900000002",
+    likedByClients: [],
+    averageRating: 4.8,
+    ratingsCount: 20,
+    createdAt: Date.now(),
+  },
+  {
+    id: "3",
+    name: "Mariama",
+    email: "mariama@example.com",
+    profileImageUrl: "/placeholder.png",
+    bannerImageUrl: "",
+    shopName: "Boutique Mariama",
+    address: "Lomé, Togo",
+    latitude: 6.1900,
+    longitude: 1.3500,
+    phoneNumber: "900000003",
+    likedByClients: [],
+    averageRating: 4.2,
+    ratingsCount: 8,
+    createdAt: Date.now(),
+  },
+];
+
+
+  // 📍 Récupération position utilisateur
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => setError("Impossible de récupérer la position"),
+        { enableHighAccuracy: true }
+      );
+    } else {
+      setError("Géolocalisation non supportée");
+    }
+  }, []);
+
+  // 🔥 Récupération vendeuses Firestore
+  // useEffect(() => {
+  //   const fetchVendors = async () => {
+  //     if (!userLoc) return;
+
+  //     setLoading(true);
+  //     try {
+  //       const querySnapshot = await getDocs(collection(db, "users"));
+  //       const vendeuses: Vendor[] = [];
+
+  //       querySnapshot.forEach((doc) => {
+  //         const data = doc.data();
+  //         if (data.role === "vendeuse" && data.latitude && data.longitude) {
+  //           vendeuses.push({
+  //             id: doc.id,
+  //             name: data.name,
+  //             email: data.email,
+  //             profileImageUrl: data.profileImageUrl || "/placeholder.png",
+  //             bannerImageUrl: data.bannerImageUrl || "",
+  //             shopName: data.shopName || "",
+  //             address: data.address || "",
+  //             latitude: data.latitude,
+  //             longitude: data.longitude,
+  //             phoneNumber: data.phoneNumber || "",
+  //             likedByClients: data.likedByClients || [],
+  //             averageRating: data.averageRating || 0,
+  //             ratingsCount: data.ratingsCount || 0,
+  //             createdAt: data.createdAt ? Number(data.createdAt) : Date.now(), // Ajout de createdAt
+  //           });
+  //         }
+  //       });
+
+  //       // 📌 Filtrage par distance + recherche
+  //       const filtered = vendeuses
+  //         .map((v) => ({
+  //           ...v,
+  //           distanceKm: getDistanceKm(
+  //             userLoc.lat,
+  //             userLoc.lng,
+  //             v.latitude,
+  //             v.longitude
+  //           ),
+  //         }))
+  //         .filter(
+  //           (v) =>
+  //             v.distanceKm! <= radiusKm &&
+  //             v.name.toLowerCase().includes(search.toLowerCase())
+  //         );
+
+  //       setVendors(filtered);
+  //     } catch (err) {
+  //       console.error("Erreur Firestore :", err);
+  //       setError("Impossible de charger les vendeuses");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchVendors();
+  // }, [userLoc, search, radiusKm]);
+  useEffect(() => {
+  if (!userLoc) return;
+
+  setLoading(true);
+  try {
+    // Ici on utilise fakeVendors au lieu de Firestore
+    const vendeuses = fakeVendors;
+
+    const filtered = vendeuses
+      .map((v) => ({
+        ...v,
+        distanceKm: getDistanceKm(
+          userLoc.lat,
+          userLoc.lng,
+          v.latitude,
+          v.longitude
+        ),
+      }))
+      .filter(
+        (v) =>
+          v.distanceKm! <= radiusKm &&
+          v.name.toLowerCase().includes(search.toLowerCase())
+      );
+
+    setVendors(filtered);
+  } catch (err) {
+    console.error("Erreur :", err);
+    setError("Impossible de charger les vendeuses");
+  } finally {
+    setLoading(false);
+  }
+}, [userLoc, search, radiusKm]);
+
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <ProtectedPage>
+    <Wrapper>
+      <div className="max-w-4xl mx-auto">
+        {/* Barre de recherche */}
+        <div className="card bg-base-100 shadow mb-4 p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1">
+              <label className="block text-sm">Recherche (nom)</label>
+              <input
+                className="input input-bordered w-full"
+                placeholder="Ex : Awa, Fatou..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <div className="w-48">
+              <label className="block text-sm">Rayon : {radiusKm} km</label>
+              <input
+                type="range"
+                min={0.5}
+                max={20}
+                step={0.5}
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(Number(e.target.value))}
+                className="range range-xs"
+              />
+            </div>
+
+            <div className="w-40">
+              <label className="block text-sm">Ma position</label>
+              <div className="text-sm">
+                {userLoc ? (
+                  <span>
+                    {userLoc.lat.toFixed(4)}, {userLoc.lng.toFixed(4)}
+                  </span>
+                ) : error ? (
+                  <span className="text-red-500">{error}</span>
+                ) : (
+                  <span>Récupération...</span>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* Liste vendeuses */}
+        {loading ? (
+          <div className="text-center py-8">Recherche des vendeuses…</div>
+        ) : vendors.length === 0 ? (
+          <div className="text-center py-8">
+            Aucune vendeuse trouvée dans ce rayon.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            {vendors.map((v) => (
+              <div
+                key={v.id}
+                className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 rounded-xl overflow-hidden"
+              >
+                {/* Image bannière si dispo */}
+                {v.bannerImageUrl && (
+                  <img
+                    src={v.bannerImageUrl}
+                    alt={`Bannière de ${v.shopName}`}
+                    className="w-full h-24 object-cover"
+                  />
+                )}
+
+                <div className="flex gap-4 p-5 items-center">
+                  <img
+                    src={v.profileImageUrl}
+                    alt={v.name}
+                    className="w-24 h-24 rounded-xl object-cover ring-1 ring-gray-200"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src =
+                        "/placeholder.png";
+                    }}
+                  />
+
+                  <div className="flex-1">
+                    {/* Nom + Adresse + Étoiles */}
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-800">
+                          {v.name}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {v.address || "Adresse non renseignée"}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="flex items-center gap-1 text-yellow-500 text-sm font-semibold">
+                          ⭐ {v.averageRating.toFixed(1)}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {v.ratingsCount} avis
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Distance + Bouton */}
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-sm text-gray-600">
+                        {v.distanceKm?.toFixed(2)} km
+                      </span>
+                      <button
+                        className="btn btn-sm btn-accent rounded-full px-4 shadow-md hover:shadow-lg transition"
+                        onClick={() => router.push(`/vendeuses/${v.id}`)}
+                      >
+                        Voir
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Wrapper>
+    </ProtectedPage>
   );
 }
