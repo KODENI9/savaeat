@@ -5,20 +5,21 @@ import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 import type * as LType from "leaflet";
 
-// Import Leaflet uniquement côté client
-let L: typeof LType | undefined;
+// Import Leaflet uniquement côté client (safe avec typeof window)
+let L: typeof LType | null = null;
 if (typeof window !== "undefined") {
-  // @ts-ignore
-  L = require("leaflet") as typeof LType;
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-    iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-    shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+  import("leaflet").then((leaflet) => {
+    L = leaflet;
+    delete (L.Icon.Default.prototype as { _getIconUrl?: () => string })._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+      iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+      shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+    });
   });
 }
 
-// Dynamic import des composants React-Leaflet
+// Dynamic import des composants React-Leaflet (SSRed safe)
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), { ssr: false });
 const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
@@ -36,7 +37,7 @@ export default function VendorMap({ lat, lng }: VendorMapProps) {
 
   // Récupération position client
   useEffect(() => {
-    if (typeof navigator !== "undefined" && navigator.geolocation) {
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setClientLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         (err) => console.error("Erreur localisation client:", err),
@@ -45,7 +46,7 @@ export default function VendorMap({ lat, lng }: VendorMapProps) {
     }
   }, []);
 
-  // Composant interne pour centrer la carte sur les deux positions
+  // Composant interne pour centrer la carte sur vendeuse + client
   function FitBounds() {
     const map = useMap();
     mapRef.current = map as LType.Map;
@@ -55,15 +56,14 @@ export default function VendorMap({ lat, lng }: VendorMapProps) {
 
       if (clientLocation) {
         const bounds = L.latLngBounds(
-          [lat, lng], 
+          [lat, lng],
           [clientLocation.lat, clientLocation.lng]
         );
         map.fitBounds(bounds, { padding: [50, 50] });
       } else {
         map.setView([lat, lng], 15);
       }
-    // Seuls lat, lng et map sont nécessaires
-    }, [map, lat, lng]);
+    }, [map, clientLocation]); // ✅ dépendances correctes
 
     return null;
   }
@@ -72,11 +72,7 @@ export default function VendorMap({ lat, lng }: VendorMapProps) {
 
   return (
     <div className="w-full h-96 rounded-xl overflow-hidden shadow">
-      <MapContainer
-        center={[lat, lng]}
-        zoom={15}
-        className="w-full h-full"
-      >
+      <MapContainer center={[lat, lng]} zoom={15} className="w-full h-full">
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
