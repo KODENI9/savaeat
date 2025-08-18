@@ -63,7 +63,7 @@ export default function VendorMap({ lat, lng }: VendorMapProps) {
       } else {
         map.setView([lat, lng], 15);
       }
-    }, [map, clientLocation]); // ✅ dépendances correctes
+    }, [map]); // ✅ dépendances correctes
 
     return null;
   }
