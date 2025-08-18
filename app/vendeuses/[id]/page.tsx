@@ -8,6 +8,8 @@ import { onAuthStateChanged } from "firebase/auth";
 import { addReview } from "@/src/services/addReview.ts";
 import { _toggleLike } from "@/src/services/toggleLike";
 import Image from "next/image";
+import Wrapper from "@/app/components/Wrapper";
+import VendorMap from "@/app/components/VendorMap";
 
 type Vendor = {
   id: string;
@@ -149,6 +151,7 @@ const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
   if (!vendor) return <div className="text-center py-8">Vendeuse introuvable.</div>;
 
   return (
+    <Wrapper>
     <div className="max-w-3xl mx-auto p-4">
       {/* Bannière + Like */}
       <div className="relative w-full h-52 rounded-2xl overflow-hidden shadow-lg">
@@ -214,7 +217,13 @@ const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
           </button>
         </div>
       </div>
-
+      {/* Carte Google Maps */}
+      {vendor.latitude && vendor.longitude && (
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold mb-2">Localisation</h2>
+          <VendorMap lat={vendor.latitude} lng={vendor.longitude} />
+        </div>
+      )}
       {/* Liste avis */}
       <div className="mt-6">
         <h2 className="text-lg font-semibold mb-3">Avis des clients ({reviews.length})</h2>
@@ -252,5 +261,6 @@ const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
         )}
       </div>
     </div>
+    </Wrapper>
   );
 }
