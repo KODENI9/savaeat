@@ -3,12 +3,14 @@
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
+import type * as LType from "leaflet";
 
 // Import Leaflet uniquement côté client
-let L: any;
+let L: typeof LType | undefined;
 if (typeof window !== "undefined") {
-  L = require("leaflet");
-  delete L.Icon.Default.prototype._getIconUrl;
+  // @ts-ignore
+  L = require("leaflet") as typeof LType;
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
   L.Icon.Default.mergeOptions({
     iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
     iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
@@ -30,7 +32,7 @@ interface VendorMapProps {
 
 export default function VendorMap({ lat, lng }: VendorMapProps) {
   const [clientLocation, setClientLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const mapRef = useRef<any>(null);
+  const mapRef = useRef<LType.Map | null>(null);
 
   // Récupération position client
   useEffect(() => {
@@ -46,7 +48,7 @@ export default function VendorMap({ lat, lng }: VendorMapProps) {
   // Composant interne pour centrer la carte sur les deux positions
   function FitBounds() {
     const map = useMap();
-    mapRef.current = map;
+    mapRef.current = map as LType.Map;
 
     useEffect(() => {
       if (!map || !L) return;
@@ -60,7 +62,8 @@ export default function VendorMap({ lat, lng }: VendorMapProps) {
       } else {
         map.setView([lat, lng], 15);
       }
-    }, [map, clientLocation]);
+    // Seuls lat, lng et map sont nécessaires
+    }, [map, lat, lng]);
 
     return null;
   }
