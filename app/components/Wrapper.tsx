@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Navbar from "./Navbar";
 import { useRouter } from "next/navigation";
 import useAuth from "@/src/hooks/useAuth";
+import Loader from "./Loader";
 
 
 type WrapperProps = {
@@ -19,7 +20,7 @@ const Wrapper = ({children}:WrapperProps) => {
     }
   }, [loading, user, router]);
 
-  if (loading) return <p>Chargement...</p>;
+  if (loading) return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
   return (
     <div>
         <Navbar/>

@@ -3,6 +3,7 @@
 import useAuth from "@/src/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import Loader from "./Loader";
 
 export default function ProtectedPage({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -15,7 +16,7 @@ export default function ProtectedPage({ children }: { children: React.ReactNode 
   }, [user, loading, router]);
 
   if (loading || !user) {
-    return <p>Chargement...</p>;
+    return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
   }
 
   return <>{children}</>;

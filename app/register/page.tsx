@@ -106,7 +106,7 @@ const pickBanner = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!profileImageUrl || !bannerImageUrl) {
       setError("Profile & bannière sont obligatoires.");
       return;
-    }
+    } 
     if (role === "vendor") {
       if (!shopName || !address || !phoneNumber) {
         setError("Boutique, adresse et téléphone sont requis.");

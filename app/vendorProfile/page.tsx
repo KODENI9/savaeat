@@ -7,7 +7,8 @@ import { Vendor } from "@/src/types";
 import { getAuth } from "firebase/auth";
 import Wrapper from "../components/Wrapper";
 import Image from "next/image";
- 
+import Loader from "../components/Loader";
+
 export default function VendorProfilePage() {
   const auth = getAuth();
   const vendorId = auth.currentUser?.uid; 
@@ -60,7 +61,7 @@ export default function VendorProfilePage() {
     setUpdating(false);
   };
 
-  if (loading) return <p className="text-center">Chargement...</p>;
+  if (loading) return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
   if (!vendor) return <p className="text-center">Vendeuse introuvable</p>;
 
   return (

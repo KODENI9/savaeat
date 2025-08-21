@@ -10,6 +10,7 @@ import { _toggleLike } from "@/src/services/toggleLike";
 import Image from "next/image";
 import Wrapper from "@/app/components/Wrapper";
 import VendorMap from "@/app/components/VendorMap";
+import Loader from "@/app/components/Loader";
 
 type Vendor = {
   id: string;
@@ -147,48 +148,53 @@ const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
     }
   };
 
-  if (loading) return <div className="text-center py-8">Chargement…</div>;
+  if (loading) return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
   if (!vendor) return <div className="text-center py-8">Vendeuse introuvable.</div>;
 
   return (
     <Wrapper>
     <div className="max-w-3xl mx-auto p-4">
-      {/* Bannière + Like */}
-      <div className="relative w-full h-52 rounded-2xl overflow-hidden shadow-lg">
-        <Image
-          src={vendor.bannerImageUrl || "/banner-placeholder.jpg"}
-          alt="Bannière"
-          fill
-          className="object-cover brightness-95"
-          priority
-        />
-        <button
-          onClick={toggleLike}
-          className={`absolute top-3 right-3 flex items-center gap-1 px-3 py-2 rounded-full shadow-md transition-all duration-200 
-          ${isLiked ? "bg-red-500 text-white hover:bg-red-600" : "bg-white text-red-500 border border-red-300 hover:bg-red-50"}`}
-          title={isLiked ? "Retirer des favoris" : "Ajouter aux favoris"}
-        >
-          <span className="text-lg">❤</span>
-          <span className="text-sm font-medium">{likedCount}</span>
-        </button>
-      </div>
+{/* Bannière */}
+<div className="relative w-full h-52 rounded-2xl overflow-hidden shadow-2xl -z-20">
+  <Image
+    src={vendor.bannerImageUrl || "/banner-placeholder.jpg"}
+    alt="Bannière"
+    fill
+    className="object-cover brightness-90"
+    priority
+  />
 
-      {/* Profil */}
-      <div className="flex items-center gap-4 -mt-12 px-3">
-        <div className="relative">
-          <Image 
-            src={vendor.profileImageUrl || "/placeholder.png"} 
-            alt={vendor.name} 
-            width={96}
-            height={96}
-            className="rounded-full ring-4 ring-white object-cover shadow-xl" 
-          />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{vendor.shopName || vendor.name}</h1>
-          <p className="text-sm text-gray-600">{vendor.name}</p>
-        </div>
-      </div>
+  {/* Bouton like */}
+  <button
+    onClick={toggleLike}
+    className={`absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-full shadow-lg transition-all duration-200
+      ${isLiked ? "bg-red-500 text-white hover:bg-red-600" : "bg-white text-red-500 border border-red-300 hover:bg-red-50"}`}
+    title={isLiked ? "Retirer des favoris" : "Ajouter aux favoris"}
+  >
+    <span className="text-xl">❤</span>
+    <span className="text-sm font-semibold">{likedCount}</span>
+  </button>
+</div>
+
+{/* Profil + Infos vendeur */}
+<div className="flex flex-col items-center -mt-14 px-4 relative z-10">
+  <Image
+    src={vendor.profileImageUrl || "/placeholder.png"}
+    alt={vendor.name}
+    width={120}
+    height={120}
+    className="rounded-full ring-4 ring-white object-cover shadow-2xl"
+  />
+
+  <div className="mt-4 text-center">
+    <h1 className="text-2xl font-extrabold text-gray-900">{vendor.shopName || vendor.name}</h1>
+    <p className="text-sm text-gray-600">{vendor.name}</p>
+    {/* {vendor.description && (
+      <p className="text-sm text-gray-500 mt-2 max-w-md">{vendor.description}</p>
+    )} */}
+  </div>
+</div>
+
 
       {/* Stats */}
       <div className="mt-4 flex items-center gap-3 text-sm">
@@ -239,23 +245,34 @@ const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
                 return tb - ta;
               })
               .map((r) => (
-                <div key={r.id} className="card bg-base-100 shadow p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content rounded-full w-8">
-                          <span>{r.clientName?.[0]?.toUpperCase() || "C"}</span>
-                        </div>
-                      </div>
-                      <div className="font-semibold">{r.clientName}</div>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {r.createdAt instanceof Timestamp ? new Date(r.createdAt.seconds * 1000).toLocaleDateString() : new Date(r.createdAt).toLocaleDateString()}
-                    </div>
-                  </div>
-                  <div className="text-yellow-500 text-sm mt-1">⭐ {r.rating}/5</div>
-                  <div className="text-sm text-gray-700 mt-1">{r.comment}</div>
-                </div>
+                <div
+  key={r.id}
+  className="card bg-gray-50 shadow-md hover:shadow-xl transition-shadow duration-300 rounded-2xl p-5 border border-gray-200"
+>
+  <div className="flex items-center justify-between mb-3">
+    <div className="flex items-center gap-4">
+      <div className="avatar">
+        <div className="bg-gray-300 text-gray-700 rounded-full w-12 h-12 flex items-center justify-center text-lg font-bold">
+          {r.clientName?.[0]?.toUpperCase() || "C"}
+        </div>
+      </div>
+      <div className="flex flex-col">
+        <span className="font-semibold text-gray-800 text-base">{r.clientName}</span>
+        <span className="text-xs text-gray-400">
+          {r.createdAt instanceof Timestamp
+            ? new Date(r.createdAt.seconds * 1000).toLocaleDateString()
+            : new Date(r.createdAt).toLocaleDateString()}
+        </span>
+      </div>
+    </div>
+    <div className="flex items-center gap-1 text-yellow-400 font-semibold text-sm">
+      <span>⭐</span>
+      <span>{r.rating}/5</span>
+    </div>
+  </div>
+  <div className="text-gray-700 text-sm leading-relaxed">{r.comment}</div>
+</div>
+
               ))}
           </div>
         )}

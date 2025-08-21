@@ -6,6 +6,8 @@ import Wrapper from "./components/Wrapper";
 import getDistanceKm from "@/src/utils/distance";
 import ProtectedPage from "./components/ProtectedPage";
 import Image from "next/image";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/src/firebase/firebase";
 const fakeVendors: (Vendor & { distanceKm?: number })[] = [
   {
     id: "1",
@@ -85,97 +87,98 @@ export default function RecherchePage() {
   }, []);
 
   // 🔥 Récupération vendeuses Firestore
-  // useEffect(() => {
-  //   const fetchVendors = async () => {
-  //     if (!userLoc) return;
-
-  //     setLoading(true);
-  //     try {
-  //       const querySnapshot = await getDocs(collection(db, "users"));
-  //       const vendeuses: Vendor[] = [];
-
-  //       querySnapshot.forEach((doc) => {
-  //         const data = doc.data();
-  //         if (data.role === "vendeuse" && data.latitude && data.longitude) {
-  //           vendeuses.push({
-  //             id: doc.id,
-  //             name: data.name,
-  //             email: data.email,
-  //             profileImageUrl: data.profileImageUrl || "/placeholder.png",
-  //             bannerImageUrl: data.bannerImageUrl || "",
-  //             shopName: data.shopName || "",
-  //             address: data.address || "",
-  //             latitude: data.latitude,
-  //             longitude: data.longitude,
-  //             phoneNumber: data.phoneNumber || "",
-  //             likedByClients: data.likedByClients || [],
-  //             averageRating: data.averageRating || 0,
-  //             ratingsCount: data.ratingsCount || 0,
-  //             createdAt: data.createdAt ? Number(data.createdAt) : Date.now(), // Ajout de createdAt
-  //           });
-  //         }
-  //       });
-
-  //       // 📌 Filtrage par distance + recherche
-  //       const filtered = vendeuses
-  //         .map((v) => ({
-  //           ...v,
-  //           distanceKm: getDistanceKm(
-  //             userLoc.lat,
-  //             userLoc.lng,
-  //             v.latitude,
-  //             v.longitude
-  //           ),
-  //         }))
-  //         .filter(
-  //           (v) =>
-  //             v.distanceKm! <= radiusKm &&
-  //             v.name.toLowerCase().includes(search.toLowerCase())
-  //         );
-
-  //       setVendors(filtered);
-  //     } catch (err) {
-  //       console.error("Erreur Firestore :", err);
-  //       setError("Impossible de charger les vendeuses");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   fetchVendors();
-  // }, [userLoc, search, radiusKm]);
   useEffect(() => {
-  if (!userLoc) return;
+    const fetchVendors = async () => {
+      if (!userLoc) return;
 
-  setLoading(true);
-  try {
-    // Ici on utilise fakeVendors au lieu de Firestore
-    const vendeuses = fakeVendors;
+      setLoading(true);
+      try {
+        const querySnapshot = await getDocs(collection(db, "vendors"));
+        const vendeuses: Vendor[] = [];
 
-    const filtered = vendeuses
-      .map((v) => ({
-        ...v,
-        distanceKm: getDistanceKm(
-          userLoc.lat,
-          userLoc.lng,
-          v.latitude,
-          v.longitude
-        ),
-      }))
-      .filter(
-        (v) =>
-          v.distanceKm! <= radiusKm &&
-          v.name.toLowerCase().includes(search.toLowerCase())
-      );
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          console.log(data)
+          
+            vendeuses.push({
+              id: doc.id,
+              name: data.name,
+              email: data.email,
+              profileImageUrl: data.profileImageUrl || "/placeholder.png",
+              bannerImageUrl: data.bannerImageUrl || "",
+              shopName: data.shopName || "",
+              address: data.address || "",
+              latitude: data.latitude,
+              longitude: data.longitude,
+              phoneNumber: data.phoneNumber || "",
+              likedByClients: data.likedByClients || [],
+              averageRating: data.averageRating || 0,
+              ratingsCount: data.ratingsCount || 0,
+              createdAt: data.createdAt ? Number(data.createdAt) : Date.now(), // Ajout de createdAt
+            });
+          
+        });
 
-    setVendors(filtered);
-  } catch (err) {
-    console.error("Erreur :", err);
-    setError("Impossible de charger les vendeuses");
-  } finally {
-    setLoading(false);
-  }
-}, [userLoc, search, radiusKm]);
+        // 📌 Filtrage par distance + recherche
+        const filtered = vendeuses
+          .map((v) => ({
+            ...v,
+            distanceKm: getDistanceKm(
+              userLoc.lat,
+              userLoc.lng,
+              v.latitude,
+              v.longitude
+            ),
+          }))
+          .filter(
+            (v) =>
+              v.distanceKm! <= radiusKm &&
+              v.name.toLowerCase().includes(search.toLowerCase())
+          );
+
+        setVendors(filtered);
+      } catch (err) {
+        console.error("Erreur Firestore :", err);
+        setError("Impossible de charger les vendeuses");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVendors();
+  }, [userLoc, search, radiusKm]);
+//   useEffect(() => {
+//   if (!userLoc) return;
+
+//   setLoading(true);
+//   try {
+//     // Ici on utilise fakeVendors au lieu de Firestore
+//     const vendeuses = fakeVendors;
+
+//     const filtered = vendeuses
+//       .map((v) => ({
+//         ...v,
+//         distanceKm: getDistanceKm(
+//           userLoc.lat,
+//           userLoc.lng,
+//           v.latitude,
+//           v.longitude
+//         ),
+//       }))
+//       .filter(
+//         (v) =>
+//           v.distanceKm! <= radiusKm &&
+//           v.name.toLowerCase().includes(search.toLowerCase())
+//       );
+
+//     setVendors(filtered);
+//   } catch (err) {
+//     console.error("Erreur :", err);
+//     setError("Impossible de charger les vendeuses");
+//   } finally {
+//     setLoading(false);
+//   }
+// }, [userLoc, search, radiusKm]);
 
 
   return (
