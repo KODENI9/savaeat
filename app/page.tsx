@@ -8,56 +8,7 @@ import ProtectedPage from "./components/ProtectedPage";
 import Image from "next/image";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/src/firebase/firebase";
-const fakeVendors: (Vendor & { distanceKm?: number })[] = [
-  {
-    id: "1",
-    name: "Awa",
-    email: "awa@example.com",
-    profileImageUrl: "/placeholder.png",
-    bannerImageUrl: "",
-    shopName: "Boutique Awa",
-    address: "Lomé, Togo",
-    latitude: 6.1850,
-    longitude: 1.3520,
-    phoneNumber: "900000001",
-    likedByClients: [],
-    averageRating: 4.5,
-    ratingsCount: 12,
-    createdAt: Date.now(),
-  },
-  {
-    id: "2",
-    name: "Fatou",
-    email: "fatou@example.com",
-    profileImageUrl: "/placeholder.png",
-    bannerImageUrl: "",
-    shopName: "Boutique Fatou",
-    address: "Lomé, Togo",
-    latitude: 6.1870,
-    longitude: 1.3540,
-    phoneNumber: "900000002",
-    likedByClients: [],
-    averageRating: 4.8,
-    ratingsCount: 20,
-    createdAt: Date.now(),
-  },
-  {
-    id: "3",
-    name: "Mariama",
-    email: "mariama@example.com",
-    profileImageUrl: "/placeholder.png",
-    bannerImageUrl: "",
-    shopName: "Boutique Mariama",
-    address: "Lomé, Togo",
-    latitude: 6.1900,
-    longitude: 1.3500,
-    phoneNumber: "900000003",
-    likedByClients: [],
-    averageRating: 4.2,
-    ratingsCount: 8,
-    createdAt: Date.now(),
-  },
-];
+
 export default function RecherchePage() {
   const [search, setSearch] = useState("");
   const [radiusKm, setRadiusKm] = useState(5);
@@ -78,7 +29,7 @@ export default function RecherchePage() {
         (pos) => {
           setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
-        () => setError("Impossible de récupérer la position"),
+        () => setError("Impossible de récupérer la position veillez verifier votre connection internet"),
         { enableHighAccuracy: true }
       );
     } else {
@@ -147,38 +98,17 @@ export default function RecherchePage() {
 
     fetchVendors();
   }, [userLoc, search, radiusKm]);
-//   useEffect(() => {
-//   if (!userLoc) return;
 
-//   setLoading(true);
-//   try {
-//     // Ici on utilise fakeVendors au lieu de Firestore
-//     const vendeuses = fakeVendors;
+  // 🔄 Réinitialisation des résultats si la position change
+  useEffect(() => {
+    if (userLoc) {
+      setVendors([]);
+      setSearch("");
+      setRadiusKm(5);  
+      setError("");
+    }
+  }, [userLoc]);
 
-//     const filtered = vendeuses
-//       .map((v) => ({
-//         ...v,
-//         distanceKm: getDistanceKm(
-//           userLoc.lat,
-//           userLoc.lng,
-//           v.latitude,
-//           v.longitude
-//         ),
-//       }))
-//       .filter(
-//         (v) =>
-//           v.distanceKm! <= radiusKm &&
-//           v.name.toLowerCase().includes(search.toLowerCase())
-//       );
-
-//     setVendors(filtered);
-//   } catch (err) {
-//     console.error("Erreur :", err);
-//     setError("Impossible de charger les vendeuses");
-//   } finally {
-//     setLoading(false);
-//   }
-// }, [userLoc, search, radiusKm]);
 
 
   return (
