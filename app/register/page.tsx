@@ -1,4 +1,7 @@
-"use client";
+"use client";          // doit être la première ligne
+
+export const dynamic = "force-dynamic";  // force rendu côté client
+
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
