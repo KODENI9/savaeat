@@ -3,12 +3,42 @@ import { CookingPot } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import UserButton from "./UserButton";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "@/src/firebase/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function Navbar() {
     const pathname = usePathname();
+    const [profileHref, setProfileHref] = useState("/clientProfile");
+
+      useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setProfileHref("/login"); // si pas connecté
+        return;
+      }
+
+      // Vérifie si c'est un vendeur ou un client
+      const vendorDoc = await getDoc(doc(db, "vendors", user.uid));
+      if (vendorDoc.exists()) {
+        setProfileHref(`/vendorProfile/`);
+      } else {
+        const clientDoc = await getDoc(doc(db, "clients", user.uid));
+        if (clientDoc.exists()) {
+          setProfileHref(`/clientProfile/`);
+        } else {
+          setProfileHref("/"); // fallback
+        }
+      }
+    });
+    return () => unsub();
+  }, []);
+
+
     const navLinks = [
         {href: "/" , label: "Accueil"},
-        {href: `/vendorProfile` , label: "Profile"},
+        {href: profileHref , label: "Profile"},
     ]
     const isActiveLink = (href: string) =>
         pathname.replace(/\/$/, "")=== href.replace(/\/$/, ""); 

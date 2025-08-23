@@ -1,29 +1,34 @@
-import { addDoc, collection, doc, updateDoc, arrayUnion } from "firebase/firestore";
-import { db } from "../firebase/firebase";
+import { db } from "@/src/firebase/firebase";
+import { doc, updateDoc, collection, addDoc, increment, getDoc } from "firebase/firestore";
 
-export async function addReview(vendorId: string, clientId: string, clientName: string, rating: number, comment: string) {
+export async function addReview(vendorId: string, clientId: string,  rating: number, comment: string) {
+  // 1️⃣ Ajout de l’avis dans la collection "reviews"
   const reviewsRef = collection(db, "reviews");
-
-  // Création du review
   const newReview = {
-    clientId,
-    clientName,
     vendorId,
+    clientId,
     rating,
     comment,
     createdAt: Date.now(),
   };
+  await addDoc(reviewsRef, newReview);
 
-  const reviewDoc = await addDoc(reviewsRef, newReview);
+  // 2️⃣ Mise à jour du vendor
+  const vendorRef = doc(db, "vendors", vendorId);
+  const vendorSnap = await getDoc(vendorRef);
 
-  // Update vendor et client
-  await updateDoc(doc(db, "vendors", vendorId), {
-    reviewIds: arrayUnion(reviewDoc.id),
-  });
+  if (vendorSnap.exists()) {
+    const vendorData = vendorSnap.data();
+    const currentCount = vendorData.ratingsCount || 0;
+    const currentAverage = vendorData.ratingAverage || 0;
 
-  await updateDoc(doc(db, "clients", clientId), {
-    reviewIds: arrayUnion(reviewDoc.id),
-  });
+    // Nouvelle moyenne : (ancienneSomme + nouveauRating) / nouveauTotal
+    const newCount = currentCount + 1;
+    const newAverage = ((currentAverage * currentCount) + rating) / newCount;
 
-  return reviewDoc.id;
+    await updateDoc(vendorRef, {
+      ratingsCount: increment(1),
+      ratingAverage: newAverage,
+    });
+  }
 }

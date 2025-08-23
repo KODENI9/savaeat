@@ -125,6 +125,8 @@ const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
     }
   };
 
+
+
   // --- Publier un avis ---
   const submitReview = async () => {
     if (!clientId) {
@@ -138,7 +140,7 @@ const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
 
     setSending(true);
     try {
-      await addReview(vendorId, clientId, clientName, rating, comment);
+      await addReview(vendorId, clientId, rating, comment);
       setRating(0);
       setComment("");
     } catch (e) {
@@ -155,7 +157,7 @@ const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
     <Wrapper>
     <div className="max-w-3xl mx-auto p-4">
 {/* Bannière */}
-<div className="relative w-full h-52 rounded-2xl overflow-hidden shadow-2xl -z-20">
+<div className="relative w-full h-52 rounded-2xl overflow-hidden shadow-2xl">
   <Image
     src={vendor.bannerImageUrl || "/banner-placeholder.jpg"}
     alt="Bannière"
@@ -165,15 +167,16 @@ const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
   />
 
   {/* Bouton like */}
-  <button
-    onClick={toggleLike}
-    className={`absolute top-4 right-4 flex items-center gap-2 px-4 py-2 rounded-full shadow-lg transition-all duration-200
-      ${isLiked ? "bg-red-500 text-white hover:bg-red-600" : "bg-white text-red-500 border border-red-300 hover:bg-red-50"}`}
-    title={isLiked ? "Retirer des favoris" : "Ajouter aux favoris"}
-  >
-    <span className="text-xl">❤</span>
-    <span className="text-sm font-semibold">{likedCount}</span>
-  </button>
+<button
+  onClick={toggleLike}
+  className={`absolute top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 rounded-full shadow-lg transition-all duration-200 cursor-pointer
+    ${isLiked ? "bg-red-500 text-white hover:bg-red-600" : "bg-white text-red-500 border border-red-300 hover:bg-red-50"}`}
+  title={isLiked ? "Retirer des favoris" : "Ajouter aux favoris"}
+>
+  <span className="text-xl">❤</span>
+  <span className="text-sm font-semibold">{likedCount}</span>
+</button>
+
 </div>
 
 {/* Profil + Infos vendeur */}
