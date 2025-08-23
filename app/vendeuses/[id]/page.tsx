@@ -47,7 +47,7 @@ export default function VendorProfilePage() {
   const [loading, setLoading] = useState(true);
 
   const [clientId, setClientId] = useState<string | null>(null);
-  const [clientName, setClientName] = useState<string>("");
+  const [, setClientName] = useState<string>("");
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");

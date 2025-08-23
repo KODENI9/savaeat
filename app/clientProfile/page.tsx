@@ -55,10 +55,13 @@ export default function ClientProfilePage() {
       {/* Header Banner */}
       <div className="relative w-full h-64 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl overflow-hidden shadow-lg">
         {client.bannerImageUrl && (
-          <img
+          <Image
             src={client.bannerImageUrl}
             alt="Profile banner"
             className="object-cover w-full h-full opacity-90"
+            fill
+            sizes="100vw"
+            priority
           />
         )}
       </div>

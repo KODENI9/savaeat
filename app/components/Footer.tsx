@@ -20,7 +20,7 @@ const Footer: React.FC = () => {
               Politique de confidentialité
             </a>
             <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
-              Conditions d'utilisation
+              Conditions d utilisation
             </a>
             <a href="#" className="text-gray-400 hover:text-white transition-colors duration-200">
               Contact

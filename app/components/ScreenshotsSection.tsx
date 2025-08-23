@@ -44,7 +44,7 @@ const ScreenshotsSection: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-16 animate-fade-in-up">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-            Découvrez l'application en action
+            Découvrez l application en action
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Une interface intuitive conçue pour vous connecter facilement avec les meilleures vendeuses de votre quartier
@@ -141,7 +141,7 @@ const ScreenshotsSection: React.FC = () => {
                         <div className="space-y-3">
                           <div className="flex justify-end">
                             <div className="bg-orange-500 text-white p-3 rounded-lg rounded-br-none max-w-xs">
-                              <p className="text-sm">Bonjour, avez-vous du riz au gras aujourd'hui ?</p>
+                              <p className="text-sm">Bonjour, avez-vous du riz au gras aujourd hui ?</p>
                             </div>
                           </div>
                           <div className="flex justify-start">
@@ -211,7 +211,7 @@ const ScreenshotsSection: React.FC = () => {
             </div>
 
             <button className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors duration-200 transform hover:scale-105">
-              Télécharger l'app
+              Télécharger l app
             </button>
           </div>
         </div>

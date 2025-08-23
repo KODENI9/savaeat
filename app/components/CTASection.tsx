@@ -20,7 +20,7 @@ const CTASection: React.FC = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="px-8 py-4 bg-white text-orange-600 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
-              Accéder à l'app
+              Accéder à l app
             </button>
             <button className="px-8 py-4 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl border-2 border-green-500 hover:border-green-600">
               Groupe WhatsApp
