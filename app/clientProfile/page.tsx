@@ -1,9 +1,11 @@
+export const dynamic = "force-dynamic";
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/src/firebase/firebase";
-import { getAuth, onAuthStateChanged, User } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import Image from "next/image";
 import { Client } from "@/src/types";
 import Wrapper from "../components/Wrapper";
@@ -11,51 +13,65 @@ import Loader from "../components/Loader";
 
 export default function ClientProfilePage() {
   const auth = getAuth();
-  const clientId = auth.currentUser?.uid;
 
   const [client, setClient] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ name: "", email: "" });
 
-
-  // 🔹 fetch client quand user est connu
+  // 🔹 On récupère l'utilisateur côté client
   useEffect(() => {
-    if (!clientId) return
+    const user = auth.currentUser;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     const fetchClient = async () => {
-      const ref = doc(db, "clients", clientId);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const data = snap.data() as Client;
-        setClient(data);
-        setForm({ name: data.name, email: data.email });
+      try {
+        const ref = doc(db, "clients", user.uid);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const data = snap.data() as Client;
+          setClient(data);
+          setForm({ name: data.name, email: data.email });
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération du client :", error);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchClient();
-  }, [clientId]);
+  }, [auth]);
 
   const handleSave = async () => {
-    if (!clientId) return;
-    const ref = doc(db, "clients", clientId);
-    await updateDoc(ref, {
-      name: form.name,
-      email: form.email,
-    });
-    setClient((prev) => (prev ? { ...prev, ...form } : null));
-    setEditMode(false);
+    const user = auth.currentUser;
+    if (!user) return;
+
+    try {
+      await updateDoc(doc(db, "clients", user.uid), {
+        name: form.name,
+        email: form.email,
+      });
+      setClient((prev) => (prev ? { ...prev, ...form } : null));
+      setEditMode(false);
+      alert("Profil mis à jour avec succès ✅");
+    } catch (error) {
+      console.error("Erreur mise à jour profil:", error);
+      alert("Impossible de mettre à jour le profil.");
+    }
   };
 
   if (loading) return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
-  if (!clientId) return <p className="text-center mt-10">Veuillez vous connecter.</p>;
+  if (!auth.currentUser) return <p className="text-center mt-10">Veuillez vous connecter.</p>;
   if (!client) return <p className="text-center mt-10">Aucun client trouvé.</p>;
 
   return (
     <Wrapper>
       <div className="max-w-4xl mx-auto p-8">
-        {/* Header Banner */}
+        {/* Banner */}
         <div className="relative w-full h-64 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl overflow-hidden shadow-lg">
           {client.bannerImageUrl && (
             <Image
