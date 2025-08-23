@@ -1,6 +1,3 @@
-// Force Next.js à rendre cette page uniquement côté client
-export const dynamic = "force-dynamic";
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -13,30 +10,21 @@ import Wrapper from "../components/Wrapper";
 import Loader from "../components/Loader";
 
 export default function ClientProfilePage() {
+  const auth = getAuth();
+  const clientId = auth.currentUser?.uid;
+
   const [client, setClient] = useState<Client | null>(null);
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ name: "", email: "" });
 
-  // 🔹 écouter l'auth côté client seulement
-  useEffect(() => {
-    const auth = getAuth();
-    const unsub = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-    });
-    return () => unsub();
-  }, []);
 
   // 🔹 fetch client quand user est connu
   useEffect(() => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+    if (!clientId) return
 
     const fetchClient = async () => {
-      const ref = doc(db, "clients", user.uid);
+      const ref = doc(db, "clients", clientId);
       const snap = await getDoc(ref);
       if (snap.exists()) {
         const data = snap.data() as Client;
@@ -47,11 +35,11 @@ export default function ClientProfilePage() {
     };
 
     fetchClient();
-  }, [user]);
+  }, [clientId]);
 
   const handleSave = async () => {
-    if (!user) return;
-    const ref = doc(db, "clients", user.uid);
+    if (!clientId) return;
+    const ref = doc(db, "clients", clientId);
     await updateDoc(ref, {
       name: form.name,
       email: form.email,
@@ -61,7 +49,7 @@ export default function ClientProfilePage() {
   };
 
   if (loading) return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
-  if (!user) return <p className="text-center mt-10">Veuillez vous connecter.</p>;
+  if (!clientId) return <p className="text-center mt-10">Veuillez vous connecter.</p>;
   if (!client) return <p className="text-center mt-10">Aucun client trouvé.</p>;
 
   return (
