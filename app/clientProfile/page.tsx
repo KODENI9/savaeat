@@ -1,6 +1,6 @@
-export const dynamic = "force-dynamic";
+"use client";           // 🔹 Toujours en tout premier
 
-"use client";
+export const dynamic = "force-dynamic"; // ensuite seulement
 
 import { useState, useEffect } from "react";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
@@ -10,7 +10,6 @@ import Image from "next/image";
 import { Client } from "@/src/types";
 import Wrapper from "../components/Wrapper";
 import Loader from "../components/Loader";
-
 export default function ClientProfilePage() {
   const auth = getAuth();
 
