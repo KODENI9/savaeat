@@ -98,7 +98,7 @@ export async function fetchVendorByIdAction(vendorId: string): Promise<Vendor | 
 export async function saveVendorAction(vendor: Vendor, vendorId: string): Promise<void> {
     if (!vendor || !vendorId) return;
     try {
-        const { id:_id , ...vendorData } = vendor;
+        const { ...vendorData } = vendor;
         await adminDb.collection("vendors").doc(vendorId).update(vendorData);
     } catch (error) {
         console.error("Erreur mise à jour profil:", error);
@@ -217,7 +217,7 @@ export async function fetchClientByIdAction(clientId: string): Promise<Client | 
 export async function saveClientAction(client: Client, clientId: string): Promise<void> {
   if (!client || !clientId) return;
   try {
-    const { id:_id, ...clientData } = client;
+    const { ...clientData } = client;
     await adminDb.collection("clients").doc(clientId).update(clientData);
   } catch (error) {
     console.error("Erreur mise à jour profil:", error);
