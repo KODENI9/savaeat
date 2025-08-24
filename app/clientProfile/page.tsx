@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic"; // ensuite seulement
 
 import { useState, useEffect } from "react";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/src/firebase/firebase";
 import { getAuth } from "firebase/auth";
 import Image from "next/image";

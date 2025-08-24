@@ -1,11 +1,10 @@
 // app/actions.ts
 "use server";
-import { adminAuth, adminDb } from "../firebase/firebaseAdmin";
+import { adminDb } from "../firebase/firebaseAdmin";
 import { Client, Vendor } from "../types";
 import getDistanceKm from "../utils/distance";
 import { Timestamp, FieldValue } from "firebase-admin/firestore";
 
-console.log("le server en cours d'exécution")
 // ✅ Récupérer les vendeuses
 export async function fetchVendorsAction(
   userLoc: { lat: number; lng: number },
@@ -99,7 +98,7 @@ export async function fetchVendorByIdAction(vendorId: string): Promise<Vendor | 
 export async function saveVendorAction(vendor: Vendor, vendorId: string): Promise<void> {
     if (!vendor || !vendorId) return;
     try {
-        const { id, ...vendorData } = vendor;
+        const { id:_id , ...vendorData } = vendor;
         await adminDb.collection("vendors").doc(vendorId).update(vendorData);
     } catch (error) {
         console.error("Erreur mise à jour profil:", error);
@@ -218,7 +217,7 @@ export async function fetchClientByIdAction(clientId: string): Promise<Client | 
 export async function saveClientAction(client: Client, clientId: string): Promise<void> {
   if (!client || !clientId) return;
   try {
-    const { id, ...clientData } = client;
+    const { id:_id, ...clientData } = client;
     await adminDb.collection("clients").doc(clientId).update(clientData);
   } catch (error) {
     console.error("Erreur mise à jour profil:", error);
