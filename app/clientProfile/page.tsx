@@ -10,6 +10,7 @@ import Image from "next/image";
 import { Client } from "@/src/types";
 import Wrapper from "../components/Wrapper";
 import Loader from "../components/Loader";
+import { fetchClientByIdAction } from "@/src/services/action";
 export default function ClientProfilePage() {
   const auth = getAuth();
 
@@ -28,17 +29,15 @@ export default function ClientProfilePage() {
 
     const fetchClient = async () => {
       try {
-        const ref = doc(db, "clients", user.uid);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          const data = snap.data() as Client;
+        const clientId = user.uid;
+        const data = await fetchClientByIdAction(clientId);
+        if (data) {
           setClient(data);
           setForm({ name: data.name, email: data.email });
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération du client :", error);
-      } finally {
-        setLoading(false);
+        console.error("Erreur récupération client:", error);
+        
       }
     };
 

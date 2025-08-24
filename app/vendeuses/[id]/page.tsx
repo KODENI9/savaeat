@@ -5,38 +5,12 @@ import { useParams } from "next/navigation";
 import { db, auth } from "@/src/firebase/firebase";
 import { doc, collection, query, where, onSnapshot, Timestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { addReview } from "@/src/services/addReview.ts";
-import { _toggleLike } from "@/src/services/toggleLike";
 import Image from "next/image";
 import Wrapper from "@/app/components/Wrapper";
 import VendorMap from "@/app/components/VendorMap";
 import Loader from "@/app/components/Loader";
-
-type Vendor = {
-  id: string;
-  name: string;
-  email: string;
-  profileImageUrl: string;
-  bannerImageUrl: string;
-  shopName: string;
-  address: string;
-  latitude: number;
-  longitude: number;
-  phoneNumber: string;
-  likedByClients: string[];
-  averageRating?: number;
-  ratingsCount?: number;
-};
-
-type Review = {
-  id: string;
-  clientId: string;
-  clientName: string;
-  vendorId: string;
-  rating: number;
-  comment: string;
-  createdAt: Timestamp | Date;
-};
+import { Review, Vendor } from "@/src/types";
+import { addReviewAction, toggleLikeAction } from "@/src/services/action";
 
 export default function VendorProfilePage() {
   const params = useParams();
@@ -47,7 +21,7 @@ export default function VendorProfilePage() {
   const [loading, setLoading] = useState(true);
 
   const [clientId, setClientId] = useState<string | null>(null);
-  const [, setClientName] = useState<string>("");
+  const [clientName, setClientName] = useState<string>("");
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -113,42 +87,37 @@ const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
   const isLiked = clientId ? vendor?.likedByClients?.includes(clientId) : false;
 
   // --- Like / Unlike ---
-  const toggleLike = async () => {
-    if (!clientId) {
-      alert("Connectez-vous pour aimer cette vendeuse.");
-      return;
-    }
-    try {
-      await _toggleLike(vendorId, clientId);
-    } catch (e) {
-      console.error("Erreur like/unlike:", e);
-    }
-  };
-
+const toggleLike = async () => {
+  if (!clientId) {
+    alert("Connectez-vous pour aimer cette vendeuse.");
+    return;
+  }
+  await toggleLikeAction(vendorId, clientId);
+};
 
 
   // --- Publier un avis ---
-  const submitReview = async () => {
-    if (!clientId) {
-      alert("Connectez-vous pour laisser un avis.");
-      return;
-    }
-    if (!rating || !comment.trim()) {
-      alert("Note et commentaire requis.");
-      return;
-    }
+const submitReview = async () => {
+  if (!clientId) {
+    alert("Connectez-vous pour laisser un avis.");
+    return;
+  }
+  if (!rating || !comment.trim()) {
+    alert("Note et commentaire requis.");
+    return;
+  }
 
-    setSending(true);
-    try {
-      await addReview(vendorId, clientId, rating, comment);
-      setRating(0);
-      setComment("");
-    } catch (e) {
-      console.error("Erreur ajout avis:", e);
-    } finally {
-      setSending(false);
-    }
-  };
+  setSending(true);
+  try {
+    await addReviewAction(vendorId, clientId, clientName, rating, comment);
+    setRating(0);
+    setComment("");
+  } catch (e) {
+    console.error("Erreur ajout avis:", e);
+  } finally {
+    setSending(false);
+  }
+};
 
   if (loading) return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
   if (!vendor) return <div className="text-center py-8">Vendeuse introuvable.</div>;

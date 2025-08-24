@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 export interface Vendor {
   id: string;
   name: string;
@@ -28,10 +30,10 @@ export interface Client {
 
 export interface Review {
   id: string;
+  vendorId: string;
   clientId: string;
   clientName: string;
-  vendorId: string;
-  rating: number;            // 1..5
+  rating: number;
   comment: string;
-  createdAt: number;         // Date.now()
+  createdAt: Timestamp | Date;
 }

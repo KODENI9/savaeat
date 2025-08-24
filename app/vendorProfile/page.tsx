@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "@/src/firebase/firebase";
 import { Vendor } from "@/src/types";
 import { getAuth } from "firebase/auth";
 import Wrapper from "../components/Wrapper";
 import Image from "next/image";
 import Loader from "../components/Loader";
+import { fetchVendorByIdAction, saveVendorAction } from "@/src/services/action";
+
 
 export default function VendorProfilePage() {
   const auth = getAuth();
@@ -19,17 +19,12 @@ export default function VendorProfilePage() {
 
   useEffect(() => {
     if (!vendorId) return;
-
-    const fetchVendor = async () => {
-      const docRef = doc(db, "vendors", vendorId);
-      const snapshot = await getDoc(docRef);
-      if (snapshot.exists()) {
-        setVendor(snapshot.data() as Vendor);
-      }
+    const loadVendor = async () => {
+      const data = await fetchVendorByIdAction(vendorId);
+      setVendor(data);
       setLoading(false);
     };
-
-    fetchVendor();
+    loadVendor();
   }, [vendorId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -51,14 +46,12 @@ export default function VendorProfilePage() {
 
   const handleSave = async () => {
     if (!vendorId || !vendor) return;
+    const saveVendor = async () => {
+      await saveVendorAction(vendor, vendorId);
+    };
+    saveVendor();
+    alert("Profil mis à jour avec succès ✅");
     setUpdating(true);
-    try {
-      await updateDoc(doc(db, "vendors", vendorId), { ...vendor });
-      alert("Profil mis à jour avec succès ✅");
-    } catch (error) {
-      console.error("Erreur mise à jour profil:", error);
-    }
-    setUpdating(false);
   };
 
   if (loading) return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
