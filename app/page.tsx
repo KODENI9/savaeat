@@ -1,4 +1,4 @@
-"use client";
+"use client"; // 🔹 Toujours en tout premier
 import { redirect } from "next/navigation";
 import Header from "./components/Header";
 import HeroSection from "./components/HeroSection";
