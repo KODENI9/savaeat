@@ -8,13 +8,20 @@ import CTASection from "./components/CTASection";
 import Footer from "./components/Footer";
 import { verifySession } from "@/src/services/verifySession";
 import ScrollAnimations from "./components/ScrollAnimations";
+import { useEffect } from "react";
 
-export default async function Home() {
-  const user = await verifySession();
+export default function Home() {
+  // 🔹 On crée une fonction pour vérifier la session
+  const checkSession = async () => {
+    const user = await verifySession();
+    if (!user) {
+      redirect("/home"); // renvoie vers la landing si pas connecté
+    }
+  };
 
-  if (!user) {
-    redirect("/home"); // renvoie vers la landing si pas connecté
-  }
+  useEffect(() => {
+    checkSession();
+  }, []);
 
 
   return (
