@@ -25,7 +25,7 @@ const CTASection: React.FC = () => {
               href="/home"
               className="px-8 py-4 bg-white text-orange-600 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
-              Accéder à l'app
+              Accéder à l app
             </Link>
 
             {/* Bouton pour rejoindre le groupe WhatsApp */}
