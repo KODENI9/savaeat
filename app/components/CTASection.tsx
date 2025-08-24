@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link"; // ✅ important
 
 const CTASection: React.FC = () => {
   return (
@@ -30,7 +31,7 @@ const CTASection: React.FC = () => {
 
             {/* Bouton pour rejoindre le groupe WhatsApp */}
             <a
-              href="https://chat.whatsapp.com/Kfp0U8toIYLLu81ROo0XNb" // Remplace par ton numéro
+              href="https://chat.whatsapp.com/Kfp0U8toIYLLu81ROo0XNb"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-4 bg-green-500 text-white font-semibold rounded-xl hover:bg-green-600 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl border-2 border-green-500 hover:border-green-600"
