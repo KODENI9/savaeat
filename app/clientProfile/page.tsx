@@ -20,29 +20,33 @@ export default function ClientProfilePage() {
   const [form, setForm] = useState({ name: "", email: "" });
 
   // 🔹 On récupère l'utilisateur côté client
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+useEffect(() => {
+  const user = auth.currentUser;
+  if (!user) {
+    setLoading(false);
+    return;
+  }
 
-    const fetchClient = async () => {
-      try {
-        const clientId = user.uid;
-        const data = await fetchClientByIdAction(clientId);
-        if (data) {
-          setClient(data);
-          setForm({ name: data.name, email: data.email });
-        }
-      } catch (error) {
-        console.error("Erreur récupération client:", error);
-        
+  const fetchClient = async () => {
+    try {
+      const clientId = user.uid;
+      const data = await fetchClientByIdAction(clientId);
+      console.log(data);
+
+      if (data) {
+        setClient(data);
+        setForm({ name: data.name, email: data.email });
       }
-    };
+    } catch (error) {
+      console.error("Erreur récupération client:", error);
+    } finally {
+      // 🔹 Important : toujours arrêter le loading
+      setLoading(false);
+    }
+  };
 
-    fetchClient();
-  }, [auth]);
+  fetchClient();
+}, [auth]);
 
   const handleSave = async () => {
     const user = auth.currentUser;

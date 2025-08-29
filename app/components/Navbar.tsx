@@ -8,7 +8,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/src/firebase/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-export default function Navbar() {
+  export default function Navbar() {
     const pathname = usePathname();
     const [profileHref, setProfileHref] = useState("/clientProfile");
 
@@ -37,7 +37,7 @@ export default function Navbar() {
 
 
     const navLinks = [
-        {href: "/" , label: "Accueil"},
+        {href: "/home" , label: "Accueil"},
         {href: profileHref , label: "Profile"},
     ]
     const isActiveLink = (href: string) =>

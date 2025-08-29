@@ -151,10 +151,24 @@ export async function addReviewAction(
       createdAt: Timestamp.now(),
     });
 
-    // Incrémenter ratingsCount dans vendors
+    // Récupérer les infos actuelles du vendeur
     const vendorRef = adminDb.collection("vendors").doc(vendorId);
+    const vendorSnap = await vendorRef.get();
+
+    if (!vendorSnap.exists) throw new Error("Vendeur introuvable");
+
+    const vendorData = vendorSnap.data() || {};
+    const oldCount = vendorData.ratingsCount || 0;
+    const oldAverage = vendorData.averageRating || 0;
+
+    // Nouveau calcul
+    const newCount = oldCount + 1;
+    const newAverage = (oldAverage * oldCount + rating) / newCount;
+
+    // Mettre à jour le vendeur
     await vendorRef.update({
       ratingsCount: FieldValue.increment(1),
+      averageRating: newAverage,
     });
 
     return { success: true };
@@ -163,6 +177,96 @@ export async function addReviewAction(
     throw err;
   }
 }
+
+// ✅ Mettre à jour un Avis
+export async function updateReviewAction(
+  reviewId: string,
+  vendorId: string,
+  newRating: number,
+  newComment: string
+) {
+  try {
+    const reviewRef = adminDb.collection("reviews").doc(reviewId);
+    const reviewSnap = await reviewRef.get();
+
+    if (!reviewSnap.exists) throw new Error("Avis introuvable");
+    const oldReview = reviewSnap.data()!;
+    const oldRating = oldReview.rating;
+
+    // Mettre à jour le review
+    await reviewRef.update({
+      rating: newRating,
+      comment: newComment,
+      updatedAt: Timestamp.now(),
+    });
+
+    // Recalcul de la moyenne
+    const vendorRef = adminDb.collection("vendors").doc(vendorId);
+    const vendorSnap = await vendorRef.get();
+    const vendorData = vendorSnap.data()!;
+
+    const count = vendorData.ratingsCount || 0;
+    const oldAverage = vendorData.averageRating || 0;
+
+    // Formule: on enlève l’ancienne note, on ajoute la nouvelle
+    const newAverage = (oldAverage * count - oldRating + newRating) / count;
+
+    await vendorRef.update({ averageRating: newAverage });
+
+    return { success: true };
+  } catch (err) {
+    console.error("Erreur updateReviewAction:", err);
+    throw err;
+  }
+}
+
+
+// ✅ Supprimer un Avis
+
+export async function deleteReviewAction(reviewId: string, vendorId: string) {
+  try {
+    const reviewRef = adminDb.collection("reviews").doc(reviewId);
+    const reviewSnap = await reviewRef.get();
+
+    if (!reviewSnap.exists) throw new Error("Avis introuvable");
+    const reviewData = reviewSnap.data()!;
+    const oldRating = reviewData.rating;
+
+    // Supprimer l'avis
+    await reviewRef.delete();
+
+    // Mettre à jour le vendeur
+    const vendorRef = adminDb.collection("vendors").doc(vendorId);
+    const vendorSnap = await vendorRef.get();
+    const vendorData = vendorSnap.data()!;
+
+    const oldCount = vendorData.ratingsCount || 0;
+    const oldAverage = vendorData.averageRating || 0;
+
+    // Cas particulier : si c’était le dernier avis → remettre à zéro
+    if (oldCount <= 1) {
+      await vendorRef.update({
+        ratingsCount: 0,
+        averageRating: 0,
+      });
+      return { success: true };
+    }
+
+    const newCount = oldCount - 1;
+    const newAverage = (oldAverage * oldCount - oldRating) / newCount;
+
+    await vendorRef.update({
+      ratingsCount: FieldValue.increment(-1),
+      averageRating: newAverage,
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error("Erreur deleteReviewAction:", err);
+    throw err;
+  }
+}
+
 
 // ✅ Toggle like
 export async function toggleLikeAction(vendorId: string, clientId: string) {
@@ -192,6 +296,7 @@ export async function toggleLikeAction(vendorId: string, clientId: string) {
 
 export async function fetchClientByIdAction(clientId: string): Promise<Client | null> {
   if (!clientId) return null;
+
   try {
     const ref = adminDb.collection("clients").doc(clientId)
     const snap = await ref.get();

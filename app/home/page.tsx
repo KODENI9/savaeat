@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Vendor } from "@/src/types";
+import { Review, Vendor } from "@/src/types";
 import Image from "next/image";
 import { fetchVendorsAction } from "@/src/services/action";
 import ProtectedPage from "../components/ProtectedPage";
@@ -15,9 +15,13 @@ export default function RecherchePage() {
   const [loading, setLoading] = useState(true);
   const [vendors, setVendors] = useState<(Vendor & { distanceKm?: number })[]>([]);
 
+  
   const router = useRouter();
 
+  // ⭐ Calcul moyenne des notes
   
+
+
 
 
   // 📍 Récupération position utilisateur
@@ -44,6 +48,8 @@ export default function RecherchePage() {
       try {
         const vendors = await fetchVendorsAction(userLoc, radiusKm, search);
         setVendors(vendors);
+        console.log("toute les vendeuses :")
+        console.log(vendors)
       } catch (err) {
         console.error("Erreur lors de la récupération des vendeuses :", err);
         setError("Impossible de charger les vendeuses");
@@ -167,7 +173,7 @@ export default function RecherchePage() {
                     </div>
                     <div className="text-right">
                     <div className="flex items-center gap-1 text-yellow-500 text-sm font-semibold">
-                      ⭐ {v.averageRating.toFixed(1)}
+                      ⭐ {v.averageRating?.toFixed(1) || "0.0"}
                     </div>
                     <div className="text-xs text-gray-400">
                       {v.ratingsCount} avis
