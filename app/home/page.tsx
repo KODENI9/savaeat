@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect} from "react";
 import { useRouter } from "next/navigation";
-import { Review, Vendor } from "@/src/types";
+import {Vendor } from "@/src/types";
 import Image from "next/image";
 import { fetchVendorsAction } from "@/src/services/action";
 import ProtectedPage from "../components/ProtectedPage";
