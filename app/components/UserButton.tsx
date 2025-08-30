@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { auth, db } from "@/src/firebase/firebase";
 import { fetchUserByIdAction } from "@/src/services/action";
 
@@ -84,7 +85,13 @@ export default function UserButton() {
     <div className="dropdown dropdown-end">
       <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
         <div className="w-10 rounded-full">
-          <img src={user.profileImageUrl || "/default-avatar.png"} alt="Profil" />
+          <Image 
+            src={user.profileImageUrl || "/default-avatar.png"} 
+            alt="Profil"
+            width={40}
+            height={40}
+            className="rounded-full"
+          />
         </div>
       </div>
       <ul
