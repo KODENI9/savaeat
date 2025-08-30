@@ -4,35 +4,29 @@ import { useState, useEffect } from "react";
 import { Vendor } from "@/src/types";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Wrapper from "../components/Wrapper";
-import Image from "next/image";
 import Loader from "../components/Loader";
 import { fetchVendorByIdAction, saveVendorAction } from "@/src/services/action";
+import { PencilIcon } from "@heroicons/react/24/outline";
 
 export default function VendorProfilePage() {
   const auth = getAuth();
-
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [vendorId, setVendorId] = useState<string | null>(null);
+  const [profileChanged, setProfileChanged] = useState(false);
+  const [bannerChanged, setBannerChanged] = useState(false);
 
-  // 🔹 S'assurer qu'on récupère bien l'utilisateur connecté
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setVendorId(user.uid);
-      } else {
-        setLoading(false); // pas de user → on arrête
-      }
+      if (user) setVendorId(user.uid);
+      else setLoading(false);
     });
-
     return () => unsubscribe();
   }, [auth]);
 
-  // 🔹 Charger le vendor
   useEffect(() => {
     if (!vendorId) return;
-
     const loadVendor = async () => {
       try {
         const data = await fetchVendorByIdAction(vendorId);
@@ -43,7 +37,6 @@ export default function VendorProfilePage() {
         setLoading(false);
       }
     };
-
     loadVendor();
   }, [vendorId]);
 
@@ -62,6 +55,8 @@ export default function VendorProfilePage() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setVendor({ ...vendor, [field]: reader.result as string });
+        if (field === "profileImageUrl") setProfileChanged(true);
+        else setBannerChanged(true);
       };
       reader.readAsDataURL(file);
     }
@@ -73,6 +68,8 @@ export default function VendorProfilePage() {
     try {
       await saveVendorAction(vendor, vendorId);
       alert("Profil mis à jour avec succès ✅");
+      setProfileChanged(false);
+      setBannerChanged(false);
     } catch (err) {
       console.error("Erreur mise à jour:", err);
       alert("Impossible de mettre à jour le profil ❌");
@@ -81,115 +78,97 @@ export default function VendorProfilePage() {
     }
   };
 
-  // UI
   if (loading) return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
   if (!vendor) return <p className="text-center mt-10">⚠️ Vendeur introuvable ou non connecté.</p>;
 
   return (
-<Wrapper>
-  <div className="max-w-3xl mx-auto p-6 space-y-8">
-    {/* Bannière */}
-    <div className="relative w-full h-56 rounded-2xl overflow-hidden shadow-lg group">
-      {vendor.bannerImageUrl ? (
-        <Image
-          src={vendor.bannerImageUrl}
-          alt="Bannière"
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          priority
-        />
-      ) : (
-        <div className="w-full h-full bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center text-gray-400 text-lg font-medium">
-          Ajouter une bannière
-        </div>
-      )}
-      <label className="absolute bottom-3 right-3 cursor-pointer">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleFileChange(e, "bannerImageUrl")}
-          className="hidden"
-        />
-        <span className="btn btn-sm btn-outline shadow-md bg-white/80 backdrop-blur rounded-xl">
-          Modifier
-        </span>
-      </label>
-    </div>
-
-    {/* Photo de profil */}
-    <div className="relative -mt-20 flex justify-center">
-      <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl">
-        {vendor.profileImageUrl ? (
-          <Image
-            src={vendor.profileImageUrl}
-            alt="Profil"
-            fill
-            className="object-cover"
+    <Wrapper>
+      <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden mt-5">
+        {/* Bannière */}
+        <div className="relative h-32 bg-gray-200 overflow-hidden">
+          <img
+            src={vendor.bannerImageUrl || ""}
+            alt="Bannière"
+            className={`w-full h-full object-cover transition-transform duration-500 ease-in-out ${
+              bannerChanged ? "scale-105 opacity-80" : "scale-100 opacity-100"
+            }`}
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-lg font-medium">
-            Photo
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFileChange(e, "bannerImageUrl")}
+            className="absolute bottom-2 right-2 bg-white rounded px-2 py-1 text-sm cursor-pointer shadow"
+          />
+        </div>
+
+        {/* Photo de profil */}
+        <div className="flex justify-center -mt-12">
+          <div className="relative">
+            <img
+              src={vendor.profileImageUrl || ""}
+              alt="Profil"
+              className={`w-24 h-24 rounded-full border-4 border-white object-cover transition-transform duration-500 ease-in-out ${
+                profileChanged ? "scale-110 opacity-80" : "scale-100 opacity-100"
+              }`}
+            />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileChange(e, "profileImageUrl")}
+              className="absolute bottom-0 right-0 bg-white rounded-full p-1 cursor-pointer shadow"
+            />
           </div>
-        )}
+        </div>
+
+        {/* Infos du vendor */}
+        <div className="px-6 py-4 space-y-4">
+          {["name", "description"].map((field) => (
+            <div key={field} className="relative">
+              <label className="block text-gray-500 text-sm font-medium capitalize">{field}</label>
+              {field === "description" ? (
+                <textarea
+                  name={field}
+                  value={(vendor as any)[field] || ""}
+                  onChange={handleChange}
+                  rows={3}
+                  className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 pr-10"
+                />
+              ) : (
+                <input
+                  type="text"
+                  name={field}
+                  value={(vendor as any)[field] || ""}
+                  onChange={handleChange}
+                  className="w-full mt-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 pr-10"
+                />
+              )}
+              <PencilIcon className="w-5 h-5 text-gray-400 absolute right-2 top-9 pointer-events-none" />
+            </div>
+          ))}
+
+          <div>
+            <label className="block text-gray-500 text-sm font-medium">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={vendor.email}
+              className="w-full mt-1 p-2 border rounded-md bg-gray-100 cursor-not-allowed"
+              disabled
+            />
+          </div>
+        </div>
+
+        {/* Bouton de sauvegarde */}
+        <div className="px-6 pb-6">
+          <button
+            onClick={handleSave}
+            disabled={updating}
+            className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 disabled:opacity-50 transition-colors"
+          >
+            {updating ? "Sauvegarde..." : "Enregistrer"}
+          </button>
+        </div>
       </div>
-      <label className="absolute bottom-0 right-[40%] cursor-pointer">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleFileChange(e, "profileImageUrl")}
-          className="hidden"
-        />
-        <span className="btn btn-xs btn-outline shadow-sm bg-white/80 backdrop-blur rounded-lg">
-          Modifier
-        </span>
-      </label>
-    </div>
-
-    {/* Formulaire */}
-    <div className="card bg-base-100 shadow-xl rounded-2xl p-6 space-y-4">
-      <input
-        name="name"
-        value={vendor.name}
-        onChange={handleChange}
-        placeholder="Nom complet"
-        className="input input-bordered w-full rounded-xl"
-      />
-      <input
-        name="shopName"
-        value={vendor.shopName}
-        onChange={handleChange}
-        placeholder="Nom de la boutique"
-        className="input input-bordered w-full rounded-xl"
-      />
-      <input
-        name="phoneNumber"
-        value={vendor.phoneNumber}
-        onChange={handleChange}
-        placeholder="Téléphone"
-        className="input input-bordered w-full rounded-xl"
-      />
-      <textarea
-        name="address"
-        value={vendor.address}
-        onChange={handleChange}
-        placeholder="Adresse"
-        className="textarea textarea-bordered w-full rounded-xl"
-        rows={3}
-      />
-    </div>
-
-    {/* Bouton enregistrer */}
-    <div>
-      <button
-        onClick={handleSave}
-        disabled={updating}
-        className="btn btn-primary w-full rounded-xl shadow-lg text-lg"
-      >
-        {updating ? "Mise à jour..." : "💾 Enregistrer les modifications"}
-      </button>
-    </div>
-  </div>
-</Wrapper>
-
+    </Wrapper>
   );
 }
