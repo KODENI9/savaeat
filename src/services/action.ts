@@ -63,6 +63,29 @@ export async function fetchVendorsAction(
   }
 }
 
+
+// ✅ Récupérer un client ou une vendeuse par ID
+export async function fetchUserByIdAction(
+  userId: string,
+  userType: "client" | "vendor"
+): Promise<Client | Vendor | null> {
+  if (!userId) return null;
+
+  try {
+    const ref = adminDb
+      .collection(userType === "client" ? "clients" : "vendors")
+      .doc(userId);
+
+    const snap = await ref.get();
+    if (!snap.exists) return null;
+    console.log("les donner du user: ", snap.data());
+    return snap.data() as Client | Vendor;
+  } catch (error) {
+    console.error("Erreur Firestore Admin:", error);
+    return null; // 🔥 important pour éviter undefined
+  }
+}
+
 // ✅ Récupérer une vendeuse par ID
 export async function fetchVendorByIdAction(vendorId: string): Promise<Vendor | null> {
     if (!vendorId) return null;
@@ -93,6 +116,9 @@ export async function fetchVendorByIdAction(vendorId: string): Promise<Vendor | 
         
     }
 }
+
+
+
 
 // ✅ Enregistrer une vendeuse
 export async function saveVendorAction(vendor: Vendor, vendorId: string): Promise<void> {

@@ -64,7 +64,7 @@ import { doc, getDoc } from "firebase/firestore";
                     </span>
                 </div>
                
-                <div className='flex  space-x-4 items-center'>
+                <div className='flex  space-x-2 items-center'>
                     {renderLinks("btn")}
                     <UserButton />
                 </div>
