@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Vendor } from "@/src/types";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
+import Image from "next/image";
 import Wrapper from "../components/Wrapper";
 import Loader from "../components/Loader";
 import { fetchVendorByIdAction, saveVendorAction } from "@/src/services/action";
@@ -86,10 +87,11 @@ export default function VendorProfilePage() {
       <div className="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden mt-5">
         {/* Bannière */}
         <div className="relative h-32 bg-gray-200 overflow-hidden">
-          <img
-            src={vendor.bannerImageUrl || ""}
+          <Image
+            src={vendor.bannerImageUrl || "/default-banner.jpg"}
             alt="Bannière"
-            className={`w-full h-full object-cover transition-transform duration-500 ease-in-out ${
+            fill
+            className={`object-cover transition-transform duration-500 ease-in-out ${
               bannerChanged ? "scale-105 opacity-80" : "scale-100 opacity-100"
             }`}
           />
@@ -103,12 +105,14 @@ export default function VendorProfilePage() {
 
         {/* Photo de profil */}
         <div className="flex justify-center -mt-12">
-          <div className="relative">
-            <img
-              src={vendor.profileImageUrl || ""}
+            <div className="relative">
+            <Image
+              src={vendor.profileImageUrl || "/default-avatar.jpg"}
               alt="Profil"
-              className={`w-24 h-24 rounded-full border-4 border-white object-cover transition-transform duration-500 ease-in-out ${
-                profileChanged ? "scale-110 opacity-80" : "scale-100 opacity-100"
+              width={96}
+              height={96}
+              className={`rounded-full border-4 border-white object-cover transition-transform duration-500 ease-in-out ${
+              profileChanged ? "scale-110 opacity-80" : "scale-100 opacity-100"
               }`}
             />
             <input
@@ -117,7 +121,7 @@ export default function VendorProfilePage() {
               onChange={(e) => handleFileChange(e, "profileImageUrl")}
               className="absolute bottom-0 right-0 bg-white rounded-full p-1 cursor-pointer shadow"
             />
-          </div>
+            </div>
         </div>
 
         {/* Infos du vendor */}
