@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Roboto_Mono } from "next/font/google";
 import "./globals.css";
+import { NotificationProvider } from "./components/NotificationContext";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -25,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="fr" data-theme="fantasy">
       <body className={`${inter.variable} ${robotoMono.variable} antialiased`}>
-        {children}
+        <NotificationProvider>
+          {children}
+        </NotificationProvider>
       </body>
     </html>
   );

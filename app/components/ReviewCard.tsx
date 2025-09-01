@@ -7,7 +7,6 @@ interface ReviewCardProps {
 }
 
 const ReviewCard: React.FC<ReviewCardProps> = ({ review}) => {
-    console.log("Rendering ReviewCard:", review)
   return (
     <div
       key={review.id}

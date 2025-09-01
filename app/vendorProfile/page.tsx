@@ -8,10 +8,13 @@ import Image from "next/image";
 import Loader from "../components/Loader";
 import { fetchVendorByIdAction, saveVendorAction } from "@/src/services/action";
 import { Camera, Save, Pencil, X } from "lucide-react";
+import { useNotification } from "../components/NotificationContext";
 
 export default function VendorProfilePage() {
   const auth = getAuth();
+  const { notify } = useNotification();
 
+  
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -68,13 +71,13 @@ export default function VendorProfilePage() {
     setUpdating(true);
     try {
       await saveVendorAction(vendor, vendorId);
-      alert("✅ Profil mis à jour !");
+      notify("success", "Profil mis à jour avec succès ✅");
       setEditing(false);
     } catch (err) {
       console.error("Erreur mise à jour:", err);
-      alert("❌ Impossible de mettre à jour.");
+      notify("error", "Impossible de mettre à jour.");
     } finally {
-      setUpdating(false);
+      setUpdating(false); 
     }
   };
 

@@ -7,7 +7,14 @@ import { useEffect, useState, useRef } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/src/firebase/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { AiFillHome, AiOutlineUser, AiOutlineMenu, AiOutlineShoppingCart, AiOutlineHeart, AiOutlineStar } from "react-icons/ai";
+import {
+  AiFillHome,
+  AiOutlineUser,
+  AiOutlineMenu,
+  AiOutlineShoppingCart,
+  AiOutlineHeart,
+  AiOutlineStar,
+} from "react-icons/ai";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -18,7 +25,10 @@ export default function Navbar() {
   // Fermeture drawer au clic en dehors
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
+      if (
+        drawerRef.current &&
+        !drawerRef.current.contains(event.target as Node)
+      ) {
         setMenuOpen(false);
       }
     };
@@ -50,7 +60,11 @@ export default function Navbar() {
   const navLinks = [
     { href: "/home", label: "Accueil", icon: <AiFillHome size={28} /> },
     { href: profileHref, label: "Profile", icon: <AiOutlineUser size={28} /> },
-    { href: "/favorites", label: "Favoris", icon: <AiOutlineHeart size={28} /> },
+    {
+      href: "/favorites",
+      label: "Favoris",
+      icon: <AiOutlineHeart size={28} />,
+    },
     { href: "/panier", label: "Avis", icon: <AiOutlineStar size={28} /> },
   ];
 
@@ -75,7 +89,9 @@ export default function Navbar() {
               <Link
                 key={href}
                 href={href}
-                className={`btn btn-sm ${isActiveLink(href) ? "btn-accent" : ""}`}
+                className={`btn btn-sm ${
+                  isActiveLink(href) ? "btn-accent" : ""
+                }`}
               >
                 {label}
               </Link>
@@ -112,7 +128,9 @@ export default function Navbar() {
                 key={href}
                 href={href}
                 className={`p-3 rounded-lg text-lg font-medium text-center ${
-                  isActiveLink(href) ? "bg-accent text-white" : "hover:bg-gray-200"
+                  isActiveLink(href)
+                    ? "bg-accent text-white"
+                    : "hover:bg-gray-200"
                 }`}
                 onClick={() => setMenuOpen(false)}
               >
@@ -133,14 +151,18 @@ export default function Navbar() {
           >
             <span
               className={`transition-transform duration-200 ${
-                isActiveLink(href) ? "text-accent scale-125" : "text-gray-500 group-hover:scale-110"
+                isActiveLink(href)
+                  ? "text-accent scale-125"
+                  : "text-gray-500 group-hover:scale-110"
               }`}
             >
               {icon}
             </span>
             <span
               className={`text-xs mt-1 transition-colors duration-200 ${
-                isActiveLink(href) ? "text-accent font-semibold" : "text-gray-500"
+                isActiveLink(href)
+                  ? "text-accent font-semibold"
+                  : "text-gray-500"
               }`}
             >
               {label}
@@ -166,8 +188,13 @@ export default function Navbar() {
           animation: slide-right 0.3s ease-out forwards;
         }
         @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-4px); }
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-4px);
+          }
         }
         .animate-bounce {
           animation: bounce 0.6s infinite;

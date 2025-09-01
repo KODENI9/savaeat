@@ -16,7 +16,7 @@ import Image from "next/image";
 import Wrapper from "@/app/components/Wrapper";
 import VendorMap from "@/app/components/VendorMap";
 import Loader from "@/app/components/Loader";
-import { Client, Review, Vendor } from "@/src/types";
+import {Review, Vendor } from "@/src/types";
 import {
   addReviewAction,
   fetchReviewsWithUsers,
@@ -43,7 +43,6 @@ export default function VendorProfilePage() {
 
     const loadReviews = async () => {
       if (!vendorId) return;
-      console.log("Loading reviews for vendorId:", vendorId);
       setLoading(true);
       try {
         if (vendorId) {
