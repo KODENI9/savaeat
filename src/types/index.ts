@@ -41,7 +41,7 @@ export interface Review {
 
 // Un review enrichi avec les infos utilisateur
 export interface ReviewWithUser extends Review {
-  user: {
+  user?: {
     id: string;
     name: string;
     email: string;
