@@ -44,6 +44,7 @@ export default function RegisterPage() {
   // vendor-only
   const [shopName, setShopName] = useState("");
   const [address, setAddress] = useState("");
+  const [description, setDescription] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [latitude, setLatitude] = useState<number | null>(null);
   const [longitude, setLongitude] = useState<number | null>(null);
@@ -126,7 +127,7 @@ try {
   const cred = await createUserWithEmailAndPassword(auth, email, password);
   const uid = cred.user.uid;
   const createdAt = Date.now();
-
+  setDescription("");
   if (role === "vendor") {
     const vendorDoc = {
       id: uid,
@@ -134,6 +135,7 @@ try {
       email,
       profileImageUrl,
       bannerImageUrl,
+      description,
       shopName,
       address,
       latitude,

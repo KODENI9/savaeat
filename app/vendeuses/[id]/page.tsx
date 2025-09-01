@@ -16,8 +16,13 @@ import Image from "next/image";
 import Wrapper from "@/app/components/Wrapper";
 import VendorMap from "@/app/components/VendorMap";
 import Loader from "@/app/components/Loader";
-import { Review, Vendor } from "@/src/types";
-import { addReviewAction, toggleLikeAction } from "@/src/services/action";
+import { Client, Review, Vendor } from "@/src/types";
+import {
+  addReviewAction,
+  fetchReviewsWithUsers,
+  toggleLikeAction,
+} from "@/src/services/action";
+import ReviewCard from "@/app/components/ReviewCard";
 
 export default function VendorProfilePage() {
   const params = useParams();
@@ -29,21 +34,37 @@ export default function VendorProfilePage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [clientId, setClientId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string>("");
 
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
 
+    const loadReviews = async () => {
+      if (!vendorId) return;
+      console.log("Loading reviews for vendorId:", vendorId);
+      setLoading(true);
+      try {
+        if (vendorId) {
+          const res = await fetchReviewsWithUsers(vendorId);
+          setReviews(res); // reviews avec client complet
+        }
+      } catch (error) {
+        console.error("Erreur chargement reviews:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
   // --- Auth listener ---
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (u) {
-        setClientId(u.uid);
+        setUserId(u.uid);
         setClientName(u.displayName || u.email?.split("@")[0] || "Client");
       } else {
-        setClientId(null);
+        setUserId(null);
         setClientName("");
       }
     });
@@ -57,11 +78,7 @@ export default function VendorProfilePage() {
     setLoading(true);
 
     const vendorRef = doc(db, "vendors", vendorId);
-    const reviewsQuery = query(
-      collection(db, "reviews"),
-      where("vendorId", "==", vendorId)
-    );
-
+    
     const unsubVendor = onSnapshot(vendorRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data() as Omit<Vendor, "id">; // ✅ typage fort
@@ -73,21 +90,15 @@ export default function VendorProfilePage() {
         setVendor(null);
       }
     });
-
-    const unsubReviews = onSnapshot(reviewsQuery, (snap) => {
-      const list: Review[] = snap.docs.map((d) => {
-        const data = d.data() as Omit<Review, "id">; // ✅ typage fort
-        return { id: d.id, ...data };
-      });
-      setReviews(list);
-      setLoading(false);
-    });
-
     return () => {
       unsubVendor();
-      unsubReviews();
     };
   }, [vendorId]);
+
+useEffect(() => {
+  loadReviews();
+}, [vendorId]);
+
 
   const averageComputed = useMemo(() => {
     if (!reviews.length) return vendor?.averageRating ?? 0;
@@ -96,20 +107,20 @@ export default function VendorProfilePage() {
   }, [reviews, vendor?.averageRating]);
 
   const likedCount = vendor?.likedByClients?.length || 0;
-  const isLiked = clientId ? vendor?.likedByClients?.includes(clientId) : false;
+  const isLiked = userId ? vendor?.likedByClients?.includes(userId) : false;
 
   // --- Like / Unlike ---
   const toggleLike = async () => {
-    if (!clientId) {
+    if (!userId) {
       alert("Connectez-vous pour aimer cette vendeuse.");
       return;
     }
-    await toggleLikeAction(vendorId, clientId);
+    await toggleLikeAction(vendorId, userId);
   };
 
   // --- Publier un avis ---
   const submitReview = async () => {
-    if (!clientId) {
+    if (!userId) {
       alert("Connectez-vous pour laisser un avis.");
       return;
     }
@@ -120,9 +131,10 @@ export default function VendorProfilePage() {
 
     setSending(true);
     try {
-      await addReviewAction(vendorId, clientId, clientName, rating, comment);
+      await addReviewAction(vendorId, userId, clientName, rating, comment);
       setRating(0);
       setComment("");
+      await loadReviews();
     } catch (e) {
       console.error("Erreur ajout avis:", e);
     } finally {
@@ -209,115 +221,108 @@ export default function VendorProfilePage() {
           </div>
         </div>
 
-        {/* Formulaire avis */}
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold mb-3">Laisser un avis</h2>
-          <div className="card bg-base-100 shadow p-4">
-            <label className="block text-sm mb-1">Note</label>
-            <div className="flex gap-1 text-2xl mb-3">
-              {[1, 2, 3, 4, 5].map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setRating(s)}
-                  className="hover:scale-110 transition"
-                  aria-label={`note ${s}`}
-                >
-                  <span
-                    className={
-                      s <= rating ? "text-yellow-500" : "text-gray-300"
-                    }
-                  >
-                    ★
-                  </span>
-                </button>
-              ))}
-            </div>
-            <textarea
-              className="textarea textarea-bordered w-full"
-              placeholder="Partagez votre expérience..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={4}
-            />
-            <button
-              onClick={submitReview}
-              disabled={sending}
-              className={`btn btn-accent mt-3 w-full ${
-                sending ? "loading" : ""
-              }`}
-            >
-              {sending ? "Publication..." : "Publier l'avis"}
-            </button>
+        {/* Description */}
+        <div className="card bg-white shadow-md rounded-xl p-4 mt-4 text-gray-700 text-sm">
+          <p>
+            {vendor.description ||
+              "Spécialités traditionnelles préparées avec des ingrédients frais et locaux."}
+          </p>
+        </div>
+        {/* Infos */}
+        <div className="card bg-white shadow-md rounded-xl p-4 mt-4 text-gray-700 text-sm space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-orange-500">📍</span>
+            <span>
+              <b>Adresse :</b> {vendor.address || "—"}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-orange-500">⏰</span>
+            <span>
+              <b>Horaires :</b> 7h00 - 22h00
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-orange-500">📞</span>
+            <span>
+              <b>Téléphone :</b> {vendor.phoneNumber || "—"}
+            </span>
           </div>
         </div>
-        {/* Carte Google Maps */}
-        {vendor.latitude && vendor.longitude && (
-          <div className="mt-4">
-            <h2 className="text-lg font-semibold mb-2">Localisation</h2>
-            <VendorMap lat={vendor.latitude} lng={vendor.longitude} />
+      </div>
+
+      {/* Formulaire avis */}
+      <div className="mt-6">
+        <h2 className="text-lg font-semibold mb-3">Laisser un avis</h2>
+        <div className="card bg-base-100 shadow p-4">
+          <label className="block text-sm mb-1">Note</label>
+          <div className="flex gap-1 text-2xl mb-3">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setRating(s)}
+                className="hover:scale-110 transition"
+                aria-label={`note ${s}`}
+              >
+                <span
+                  className={s <= rating ? "text-yellow-500" : "text-gray-300"}
+                >
+                  ★
+                </span>
+              </button>
+            ))}
+          </div>
+          <textarea
+            className="textarea textarea-bordered w-full"
+            placeholder="Partagez votre expérience..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            rows={4}
+          />
+          <button
+            onClick={submitReview}
+            disabled={sending}
+            className={`btn btn-accent mt-3 w-full ${sending ? "loading" : ""}`}
+          >
+            {sending ? "Publication..." : "Publier l'avis"}
+          </button>
+        </div>
+      </div>
+      {/* Carte Google Maps */}
+      {vendor.latitude && vendor.longitude && (
+        <div className="mt-4">
+          <h2 className="text-lg font-semibold mb-2">Localisation</h2>
+          <VendorMap lat={vendor.latitude} lng={vendor.longitude} />
+        </div>
+      )}
+      {/* Liste avis */}
+      <div className="mt-6">
+        <h2 className="text-lg font-semibold mb-3">
+          Avis des clients ({reviews.length})
+        </h2>
+        {reviews.length === 0 ? (
+          <div className="text-gray-500">Aucun avis pour le moment.</div>
+        ) : (
+          <div className="space-y-3">
+            {reviews
+              .slice()
+              .sort((a, b) => {
+                const ta =
+                  a.createdAt instanceof Timestamp
+                    ? a.createdAt.seconds * 1000
+                    : new Date(a.createdAt).getTime() || 0;
+                const tb =
+                  b.createdAt instanceof Timestamp
+                    ? b.createdAt.seconds * 1000
+                    : new Date(b.createdAt).getTime() || 0;
+                return tb - ta;
+              })
+              .map((r) => (
+                <ReviewCard key={r.id} review={r} />
+              ))}
           </div>
         )}
-        {/* Liste avis */}
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold mb-3">
-            Avis des clients ({reviews.length})
-          </h2>
-          {reviews.length === 0 ? (
-            <div className="text-gray-500">Aucun avis pour le moment.</div>
-          ) : (
-            <div className="space-y-3">
-              {reviews
-                .slice()
-                .sort((a, b) => {
-                  const ta =
-                    a.createdAt instanceof Timestamp
-                      ? a.createdAt.seconds * 1000
-                      : new Date(a.createdAt).getTime() || 0;
-                  const tb =
-                    b.createdAt instanceof Timestamp
-                      ? b.createdAt.seconds * 1000
-                      : new Date(b.createdAt).getTime() || 0;
-                  return tb - ta;
-                })
-                .map((r) => (
-                  <div
-                    key={r.id}
-                    className="card bg-gray-50 shadow-md hover:shadow-xl transition-shadow duration-300 rounded-2xl p-5 border border-gray-200"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-4">
-                        <div className="avatar">
-                          <div className="bg-gray-300 text-gray-700 rounded-full w-12 h-12 flex items-center justify-center text-lg font-bold">
-                            {r.clientName?.[0]?.toUpperCase() || "C"}
-                          </div>
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-gray-800 text-base">
-                            {r.clientName}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {r.createdAt instanceof Timestamp
-                              ? new Date(
-                                  r.createdAt.seconds * 1000
-                                ).toLocaleDateString()
-                              : new Date(r.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1 text-yellow-400 font-semibold text-sm">
-                        <span>⭐</span>
-                        <span>{r.rating}/5</span>
-                      </div>
-                    </div>
-                    <div className="text-gray-700 text-sm leading-relaxed">
-                      {r.comment}
-                    </div>
-                  </div>
-                ))}
-            </div>
-          )}
-        </div>
       </div>
     </Wrapper>
   );

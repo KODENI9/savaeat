@@ -6,6 +6,7 @@ export interface Vendor {
   email: string;
   profileImageUrl: string;   // base64 data URL
   bannerImageUrl: string;    // base64 data URL
+  description: string;
   shopName: string;
   address: string;
   latitude: number;
@@ -32,8 +33,19 @@ export interface Review {
   id: string;
   vendorId: string;
   clientId: string;
-  clientName: string;
   rating: number;
   comment: string;
   createdAt: Timestamp | Date;
 }
+
+
+// Un review enrichi avec les infos utilisateur
+export interface ReviewWithUser extends Review {
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    profileImageUrl?: string;
+  } | null;
+}
+

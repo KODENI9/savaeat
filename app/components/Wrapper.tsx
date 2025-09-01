@@ -22,9 +22,9 @@ const Wrapper = ({children}:WrapperProps) => {
 
   if (loading) return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
   return (
-    <div>
+    <div className="">
         <Navbar/>
-    <div className= 'px-5 md:px-[10%] mt-8 mb-10'>
+    <div className= 'px-5 md:px-[10%] mt-8 mb-10 pt-10 pb-10'>
         {children}
     </div>
     </div>

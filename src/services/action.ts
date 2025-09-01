@@ -1,7 +1,7 @@
 // app/actions.ts
 "use server";
 import { adminDb } from "../firebase/firebaseAdmin";
-import { Client, Vendor } from "../types";
+import { Client, ReviewWithUser, Vendor } from "../types";
 import getDistanceKm from "../utils/distance";
 import { Timestamp, FieldValue } from "firebase-admin/firestore";
 
@@ -25,6 +25,7 @@ export async function fetchVendorsAction(
         email: data.email,
         profileImageUrl: data.profileImageUrl || "/placeholder.png",
         bannerImageUrl: data.bannerImageUrl || "",
+        description: data.description || "",
         shopName: data.shopName || "",
         address: data.address || "",
         latitude: data.latitude,
@@ -63,7 +64,6 @@ export async function fetchVendorsAction(
   }
 }
 
-
 // ✅ Récupérer un client ou une vendeuse par ID
 export async function fetchUserByIdAction(
   userId: string,
@@ -78,7 +78,6 @@ export async function fetchUserByIdAction(
 
     const snap = await ref.get();
     if (!snap.exists) return null;
-    console.log("les donner du user: ", snap.data());
     return snap.data() as Client | Vendor;
   } catch (error) {
     console.error("Erreur Firestore Admin:", error);
@@ -100,6 +99,7 @@ export async function fetchVendorByIdAction(vendorId: string): Promise<Vendor | 
             email: data.email,
             profileImageUrl: data.profileImageUrl || "/placeholder.png",
             bannerImageUrl: data.bannerImageUrl || "",
+            description: data.description || "",
             shopName: data.shopName || "",
             address: data.address || "",
             latitude: data.latitude,
@@ -116,8 +116,6 @@ export async function fetchVendorByIdAction(vendorId: string): Promise<Vendor | 
         
     }
 }
-
-
 
 
 // ✅ Enregistrer une vendeuse
@@ -160,7 +158,7 @@ export async function getVendorWithReviews(vendorId: string) {
 // ✅ Ajouter un avis
 export async function addReviewAction(
   vendorId: string,
-  clientId: string,
+  userId: string,
   clientName: string,
   rating: number,
   comment: string
@@ -169,7 +167,7 @@ export async function addReviewAction(
     const reviewRef = adminDb.collection("reviews").doc();
 
     await reviewRef.set({
-      clientId,
+      userId,
       clientName,
       vendorId,
       rating,
@@ -357,4 +355,58 @@ export async function saveClientAction(client: Client, clientId: string): Promis
 }
 
 
+// ✅ Récupérer les reviews d’un vendor avec les infos de l’auteur (client ou vendor)
+export async function fetchReviewsWithUsers(vendorId: string): Promise<ReviewWithUser[]> {
+  const reviewsSnap = await adminDb
+    .collection("reviews")
+    .where("vendorId", "==", vendorId)
+    .get();
 
+  if (reviewsSnap.empty) return [];
+
+  const reviews: ReviewWithUser[] = [];
+
+  for (const doc of reviewsSnap.docs) {
+    const data = doc.data();
+    console.log("Review data:", data);
+    const userId = data.userId;
+    console.log("Fetching user for review, userId:", userId);
+    let user: ReviewWithUser["user"] = null;
+
+    // Chercher dans "clients"
+    const clientDoc = await adminDb.collection("clients").doc(userId).get();
+    if (clientDoc.exists) {
+      const cData = clientDoc.data();
+      user = {
+        id: clientDoc.id,
+        name: cData?.name || "Unknown",
+        email: cData?.email || "",
+        profileImageUrl: cData?.profileImageUrl || "",
+      };
+    } else {
+      // Sinon chercher dans "vendors"
+      const vendorDoc = await adminDb.collection("vendors").doc(userId).get();
+      if (vendorDoc.exists) {
+        const vData = vendorDoc.data();
+        user = {
+          id: vendorDoc.id,
+          name: vData?.name || "Unknown",
+          email: vData?.email || "",
+          profileImageUrl: vData?.profileImageUrl || "",
+        };
+      }
+    }
+
+    reviews.push({
+      id: doc.id,
+      vendorId: data.vendorId,
+      clientId: data.userId,
+      user,
+      rating: data.rating,
+      comment: data.comment,
+      createdAt: data.createdAt?.toDate() || new Date(),
+    });
+  }
+
+  return reviews;
+}

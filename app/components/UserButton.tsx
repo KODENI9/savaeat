@@ -18,34 +18,23 @@ export default function UserButton() {
   const [user, setUser] = useState<UserData | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    console.log("UserButton mounted");
+    useEffect(() => {
 
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser: FirebaseUser | null) => {
-      console.log("onAuthStateChanged triggered", currentUser);
-
+      const unsubscribe = onAuthStateChanged(auth, async (currentUser: FirebaseUser | null) => {
       if (!currentUser) {
-        console.log("Aucun utilisateur connecté");
         setUser(null);
         return;
       }
 
       try {
         let data: UserData | null = null;
-
-        console.log("Vérification si l'utilisateur est un vendeur...");
-        console.log("id :", currentUser.email)
         const vendorDoc = await getDoc(doc(db, "vendors", currentUser.uid));
 
         if (vendorDoc.exists()) {
-          console.log("C'est un vendeur", vendorDoc.data());
           data = (await fetchUserByIdAction(currentUser.uid, "vendor")) as UserData;
-          console.log("fetchUserByIdAction vendeur:", data);
         } else {
-          console.log("Pas un vendeur, vérification client...");
           const clientDoc = await getDoc(doc(db, "clients", currentUser.uid));
           if (clientDoc.exists()) {
-            console.log("C'est un client", clientDoc.data());
             data = (await fetchUserByIdAction(currentUser.uid, "client")) as UserData;
           } else {
             console.log("Aucun document client trouvé");
@@ -53,14 +42,11 @@ export default function UserButton() {
         }
 
         if (data) {
-          console.log("Données utilisateur récupérées :", data);
           setUser(data);
         } else {
-          console.log("Aucune donnée utilisateur trouvée");
           setUser(null);
         }
       } catch (error) {
-        console.error("Erreur récupération utilisateur :", error);
         setUser(null);
       }
     });
@@ -69,15 +55,12 @@ export default function UserButton() {
   }, []);
 
   const handleLogout = async () => {
-    console.log("Déconnexion...");
     await signOut(auth);
     router.push("/login");
   };
 
-  console.log("User state actuel :", user);
 
   if (!user) {
-    console.log("Pas d'utilisateur à afficher → return null");
     return null;
   }
 

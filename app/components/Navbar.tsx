@@ -7,7 +7,7 @@ import { useEffect, useState, useRef } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/src/firebase/firebase";
 import { doc, getDoc } from "firebase/firestore";
-import { AiFillHome, AiOutlineUser, AiOutlineMenu, AiOutlineShoppingCart, AiOutlineHeart } from "react-icons/ai";
+import { AiFillHome, AiOutlineUser, AiOutlineMenu, AiOutlineShoppingCart, AiOutlineHeart, AiOutlineStar } from "react-icons/ai";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -51,7 +51,7 @@ export default function Navbar() {
     { href: "/home", label: "Accueil", icon: <AiFillHome size={28} /> },
     { href: profileHref, label: "Profile", icon: <AiOutlineUser size={28} /> },
     { href: "/favorites", label: "Favoris", icon: <AiOutlineHeart size={28} /> },
-    { href: "/panier", label: "Panier", icon: <AiOutlineShoppingCart size={28} /> },
+    { href: "/panier", label: "Avis", icon: <AiOutlineStar size={28} /> },
   ];
 
   const isActiveLink = (href: string) =>
@@ -124,7 +124,7 @@ export default function Navbar() {
       )}
 
       {/* Mobile Bottom Navigation */}
-      <div className="fixed bottom-0 w-full bg-white shadow-t z-50 flex justify-around md:hidden p-2">
+      <div className="fixed bottom-0 w-full mt-30 bg-white shadow-t z-50 flex justify-around md:hidden p-2">
         {navLinks.map(({ href, label, icon }) => (
           <Link
             key={href}
