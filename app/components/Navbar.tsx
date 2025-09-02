@@ -19,22 +19,22 @@ import {
 export default function Navbar() {
   const pathname = usePathname();
   const [profileHref, setProfileHref] = useState("/clientProfile");
-  const [menuOpen, setMenuOpen] = useState(false);
-  const drawerRef = useRef<HTMLDivElement>(null);
+  // const [menuOpen, setMenuOpen] = useState(false);
+  // const drawerRef = useRef<HTMLDivElement>(null);
 
-  // Fermeture drawer au clic en dehors
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        drawerRef.current &&
-        !drawerRef.current.contains(event.target as Node)
-      ) {
-        setMenuOpen(false);
-      }
-    };
-    if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
+  // // Fermeture drawer au clic en dehors
+  // useEffect(() => {
+  //   const handleClickOutside = (event: MouseEvent) => {
+  //     if (
+  //       drawerRef.current &&
+  //       !drawerRef.current.contains(event.target as Node)
+  //     ) {
+  //       setMenuOpen(false);
+  //     }
+  //   };
+  //   if (menuOpen) document.addEventListener("mousedown", handleClickOutside);
+  //   return () => document.removeEventListener("mousedown", handleClickOutside);
+  // }, [menuOpen]);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (user) => {
@@ -65,7 +65,7 @@ export default function Navbar() {
       label: "Favoris",
       icon: <AiOutlineHeart size={28} />,
     },
-    { href: "/panier", label: "Avis", icon: <AiOutlineStar size={28} /> },
+    // { href: "/panier", label: "Avis", icon: <AiOutlineStar size={28} /> },
   ];
 
   const isActiveLink = (href: string) =>
@@ -111,13 +111,14 @@ export default function Navbar() {
             Sa<span className="text-accent">vaEat</span>
           </span>
         </div>
-        <button onClick={() => setMenuOpen(!menuOpen)}>
+        {/* <button onClick={() => setMenuOpen(!menuOpen)}>
           <AiOutlineMenu size={28} />
-        </button>
+        </button> */}
+        <UserButton />
       </div>
 
       {/* Mobile Drawer */}
-      {menuOpen && (
+      {/* {menuOpen && (
         <div className="fixed inset-0 bg-black/30 z-40 flex justify-end">
           <div
             ref={drawerRef}
@@ -139,7 +140,7 @@ export default function Navbar() {
             ))}
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Mobile Bottom Navigation */}
       <div className="fixed bottom-0 w-full mt-30 bg-white shadow-t z-50 flex justify-around md:hidden p-2">

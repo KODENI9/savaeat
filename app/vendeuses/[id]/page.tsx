@@ -5,9 +5,6 @@ import { useParams } from "next/navigation";
 import { db, auth } from "@/src/firebase/firebase";
 import {
   doc,
-  collection,
-  query,
-  where,
   onSnapshot,
   Timestamp,
 } from "firebase/firestore";
@@ -23,6 +20,7 @@ import {
   toggleLikeAction,
 } from "@/src/services/action";
 import ReviewCard from "@/app/components/ReviewCard";
+import { useCurrentUser } from "@/src/hooks/useCurrentUser";
 
 export default function VendorProfilePage() {
   const params = useParams();
@@ -41,6 +39,9 @@ export default function VendorProfilePage() {
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
 
+  const { _userId, userType, data, _loading } = useCurrentUser();
+  
+  // Charger les reviews + users
     const loadReviews = async () => {
       if (!vendorId) return;
       setLoading(true);
@@ -105,16 +106,17 @@ useEffect(() => {
     return total / reviews.length;
   }, [reviews, vendor?.averageRating]);
 
-  const likedCount = vendor?.likedByClients?.length || 0;
-  const isLiked = userId ? vendor?.likedByClients?.includes(userId) : false;
+const likedCount = vendor?.likedBy?.length || 0;
+const isLiked = userId ? vendor?.likedBy?.includes(userId) : false;
+
 
   // --- Like / Unlike ---
   const toggleLike = async () => {
-    if (!userId) {
+    if (!userId || !userType) {
       alert("Connectez-vous pour aimer cette vendeuse.");
       return;
     }
-    await toggleLikeAction(vendorId, userId);
+    await toggleLikeAction(vendorId, userId, userType);
   };
 
   // --- Publier un avis ---

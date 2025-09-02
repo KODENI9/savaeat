@@ -31,7 +31,9 @@ export async function fetchVendorsAction(
         latitude: data.latitude,
         longitude: data.longitude,
         phoneNumber: data.phoneNumber || "",
-        likedByClients: data.likedByClients || [],
+        likedBy: data.likedByClients || [],
+        distanceKm: data.distanceKm || 0, 
+        favoriteVendors: data.favoriteVendors || [],
         averageRating: data.averageRating || 0,
         ratingsCount: data.ratingsCount || 0,
         createdAt: data.createdAt
@@ -64,6 +66,7 @@ export async function fetchVendorsAction(
   }
 }
 
+
 // ✅ Récupérer un client ou une vendeuse par ID
 export async function fetchUserByIdAction(
   userId: string,
@@ -85,6 +88,7 @@ export async function fetchUserByIdAction(
   }
 }
 
+
 // ✅ Récupérer une vendeuse par ID
 export async function fetchVendorByIdAction(vendorId: string): Promise<Vendor | null> {
     if (!vendorId) return null;
@@ -105,7 +109,8 @@ export async function fetchVendorByIdAction(vendorId: string): Promise<Vendor | 
             latitude: data.latitude,
             longitude: data.longitude,
             phoneNumber: data.phoneNumber || "",
-            likedByClients: data.likedByClients || [],
+            likedBy: data.likedByClients || [],
+            favoriteVendors: data.favoriteVendors || [],
             averageRating: data.averageRating || 0,
             ratingsCount: data.ratingsCount || 0,
             createdAt: data.createdAt ? Number(data.createdAt) : Date.now(),
@@ -292,22 +297,49 @@ export async function deleteReviewAction(reviewId: string, vendorId: string) {
 }
 
 
-// ✅ Toggle like
-export async function toggleLikeAction(vendorId: string, clientId: string) {
+// ✅ Toggle like (client ou vendor peut liker un vendor)
+export async function toggleLikeAction(
+  vendorId: string,
+  likerId: string,
+  likerType: "client" | "vendor"
+) {
   try {
     const vendorRef = adminDb.collection("vendors").doc(vendorId);
     const vendorSnap = await vendorRef.get();
 
     if (!vendorSnap.exists) throw new Error("Vendor introuvable");
 
-    const likedByClients = vendorSnap.data()?.likedByClients || [];
+    // Vérifie si le liker existe
+    const likerRef = adminDb
+      .collection(likerType === "client" ? "clients" : "vendors")
+      .doc(likerId);
+    const likerSnap = await likerRef.get();
+    if (!likerSnap.exists) throw new Error(`${likerType} introuvable`);
 
-    const alreadyLiked = likedByClients.includes(clientId);
-    await vendorRef.update({
-      likedByClients: alreadyLiked
-        ? FieldValue.arrayRemove(clientId)
-        : FieldValue.arrayUnion(clientId),
-    });
+    const likedBy = vendorSnap.data()?.likedBy || [];
+    const alreadyLiked = likedBy.includes(likerId);
+
+    if (alreadyLiked) {
+      // ✅ Supprimer le like
+      await Promise.all([
+        vendorRef.update({
+          likedBy: FieldValue.arrayRemove(likerId),
+        }),
+        likerRef.update({
+          favoriteVendors: FieldValue.arrayRemove(vendorId),
+        }),
+      ]);
+    } else {
+      // ✅ Ajouter le like
+      await Promise.all([
+        vendorRef.update({
+          likedBy: FieldValue.arrayUnion(likerId),
+        }),
+        likerRef.update({
+          favoriteVendors: FieldValue.arrayUnion(vendorId),
+        }),
+      ]);
+    }
 
     return { success: true, liked: !alreadyLiked };
   } catch (err) {
@@ -316,8 +348,8 @@ export async function toggleLikeAction(vendorId: string, clientId: string) {
   }
 }
 
-// ✅ Récupération d'un client par ID 
 
+// ✅ Récupération d'un client par ID
 export async function fetchClientByIdAction(clientId: string): Promise<Client | null> {
   if (!clientId) return null;
 
@@ -332,7 +364,7 @@ export async function fetchClientByIdAction(clientId: string): Promise<Client | 
       email: data.email,
       profileImageUrl: data.profileImageUrl || "/placeholder.png",
       bannerImageUrl: data.bannerImageUrl || "",
-      favoriteVendorIds: data.favoriteVendorIds || [],
+      favoriteVendors: data.favoriteVendors || [],
       reviewIds: data.reviewIds || [],
       createdAt: data.createdAt ? Number(data.createdAt) : Date.now(),
     } : null;
@@ -342,7 +374,8 @@ export async function fetchClientByIdAction(clientId: string): Promise<Client | 
   }
 }
 
-// ✅ Enregistrer un client 
+
+// ✅ Enregistrer un client
 export async function saveClientAction(client: Client, clientId: string): Promise<void> {
   if (!client || !clientId) return;
   try {
@@ -410,3 +443,15 @@ export async function fetchReviewsWithUsers(vendorId: string): Promise<ReviewWit
 
   return reviews;
 }
+
+
+// export async function fetchFavoritesAction(userId: string, userType: "client" | "vendor"): Promise<Vendor[]> {
+//   if (!userId || !userType) return [];
+
+//   try {
+    
+//   } catch (error) {
+//     console.error("Erreur fetchFavoritesAction:", error);
+//     return [];
+//   }
+// }

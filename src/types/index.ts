@@ -12,7 +12,8 @@ export interface Vendor {
   latitude: number;
   longitude: number;
   phoneNumber: string;
-  likedByClients: string[];  // client ids
+  likedBy: string[];  // client ids
+  favoriteVendors: string[];
   averageRating: number;
   ratingsCount: number;
   createdAt: number;         // Date.now()
@@ -24,7 +25,7 @@ export interface Client {
   email: string;
   profileImageUrl: string;   // base64 data URL
   bannerImageUrl: string;    // base64 data URL
-  favoriteVendorIds: string[];
+  favoriteVendors: string[];
   reviewIds: string[];
   createdAt: number;         // Date.now()
 }

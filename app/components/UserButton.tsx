@@ -47,6 +47,7 @@ export default function UserButton() {
           setUser(null);
         }
       } catch (error) {
+        console.error("Erreur lors de la récupération des données utilisateur :", error);
         setUser(null);
       }
     });
