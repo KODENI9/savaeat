@@ -251,10 +251,10 @@ export default function VendorProfilePage() {
             </span>
           </div>
           <div>
-            <h3 className="font-semibold">⏰ Horaires d'ouverture </h3>
+            <h3 className="font-semibold">⏰ Horaires d ouverture </h3>
             <ul className="space-y-2">
               {sortedSchedule.map(([day, hours]) => (
-                <li key={day} className="flex justify-between">
+                <li key={day} className="flex justify-between">  
                   <span>{day}</span>
                   <span>
                     {hours.open} - {hours.close}

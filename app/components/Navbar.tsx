@@ -3,7 +3,7 @@ import { CookingPot } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import UserButton from "./UserButton";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState} from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "@/src/firebase/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -11,9 +11,7 @@ import {
   AiFillHome,
   AiOutlineUser,
   AiOutlineMenu,
-  AiOutlineShoppingCart,
   AiOutlineHeart,
-  AiOutlineStar,
 } from "react-icons/ai";
 
 export default function Navbar() {
