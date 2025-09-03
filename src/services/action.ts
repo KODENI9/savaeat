@@ -39,6 +39,7 @@ export async function fetchVendorsAction(
         createdAt: data.createdAt
           ? Number(data.createdAt)
           : Date.now(),
+        schedule: data.schedule || {},
       };
     });
 
@@ -114,6 +115,7 @@ export async function fetchVendorByIdAction(vendorId: string): Promise<Vendor | 
             averageRating: data.averageRating || 0,
             ratingsCount: data.ratingsCount || 0,
             createdAt: data.createdAt ? Number(data.createdAt) : Date.now(),
+            schedule: data.schedule || {},
         } : null;
     } catch (error) {
         console.error("Erreur Firestore Admin:", error);

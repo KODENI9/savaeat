@@ -14,7 +14,16 @@ export default function VendorProfilePage() {
   const auth = getAuth();
   const { notify } = useNotification();
 
-  
+  const days = [
+    "Lundi",
+    "Mardi",
+    "Mercredi",
+    "Jeudi",
+    "Vendredi",
+    "Samedi",
+    "Dimanche",
+  ];
+
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -46,7 +55,9 @@ export default function VendorProfilePage() {
     loadVendor();
   }, [vendorId]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     if (!vendor) return;
     setVendor({ ...vendor, [e.target.name]: e.target.value });
   };
@@ -77,17 +88,37 @@ export default function VendorProfilePage() {
       console.error("Erreur mise à jour:", err);
       notify("error", "Impossible de mettre à jour.");
     } finally {
-      setUpdating(false); 
+      setUpdating(false);
     }
   };
 
-  if (loading) return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
-  if (!vendor) return <p className="text-center mt-10">⚠️ Vendeur introuvable.</p>;
+  const handleHoursChange = (
+    day: string,
+    field: "open" | "close",
+    value: string
+  ) => {
+    if (!vendor) return;
+    setVendor({
+      ...vendor,
+      schedule: {
+        ...vendor.schedule,
+        [day]: {
+          open: vendor.schedule?.[day]?.open || "",
+          close: vendor.schedule?.[day]?.close || "",
+          [field]: value,
+        },
+      },
+    });
+  };
+
+  if (loading)
+    return <Loader fullScreen variant="ring" size="lg" label="Chargement…" />;
+  if (!vendor)
+    return <p className="text-center mt-10">⚠️ Vendeur introuvable.</p>;
 
   return (
     <Wrapper>
       <div className="max-w-3xl mx-auto p-6 space-y-8">
-
         {/* Bannière */}
         <div className="relative w-full h-56 rounded-2xl overflow-hidden shadow-md group">
           {vendor.bannerImageUrl ? (
@@ -122,7 +153,12 @@ export default function VendorProfilePage() {
         <div className="relative -mt-20 flex justify-center">
           <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg relative">
             {vendor.profileImageUrl ? (
-              <Image src={vendor.profileImageUrl} alt="Profil" fill className="object-cover" />
+              <Image
+                src={vendor.profileImageUrl}
+                alt="Profil"
+                fill
+                className="object-cover"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
                 Photo
@@ -165,6 +201,60 @@ export default function VendorProfilePage() {
               <p className="text-sm text-gray-500">Description</p>
               <p className="font-semibold">{vendor.description || "—"}</p>
             </div>
+            <div>
+              <p className="text-sm text-gray-500">Horaires</p>
+              <ul className="mt-1 space-y-1">
+                {days.map((day) => {
+                  const isClosed =
+                    !vendor.schedule?.[day]?.open &&
+                    !vendor.schedule?.[day]?.close;
+
+                  return (
+                    <div key={day} className="flex items-center gap-3">
+                      <span className="w-20">{day}</span>
+
+                      <input
+                        type="time"
+                        value={vendor.schedule?.[day]?.open || ""}
+                        onChange={(e) =>
+                          handleHoursChange(day, "open", e.target.value)
+                        }
+                        className="input input-bordered w-28"
+                        disabled={isClosed}
+                      />
+                      <span>-</span>
+                      <input
+                        type="time"
+                        value={vendor.schedule?.[day]?.close || ""}
+                        onChange={(e) =>
+                          handleHoursChange(day, "close", e.target.value)
+                        }
+                        className="input input-bordered w-28"
+                        disabled={isClosed}
+                      />
+
+                      <label className="flex items-center gap-2 ml-4">
+                        <input
+                          type="checkbox"
+                          checked={isClosed}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              handleHoursChange(day, "open", "");
+                              handleHoursChange(day, "close", "");
+                            } else {
+                              handleHoursChange(day, "open", "");
+                              handleHoursChange(day, "close", "");
+                            }
+                          }}
+                        />
+                        Fermé
+                      </label>
+                    </div>
+                  );
+                })}
+              </ul>
+            </div>
+
             <button
               onClick={() => setEditing(true)}
               className="btn btn-outline w-full mt-4 flex items-center gap-2"
@@ -179,31 +269,79 @@ export default function VendorProfilePage() {
           <div className="card bg-base-100 shadow-lg rounded-2xl p-6 space-y-4">
             <div>
               <label className="label">Nom complet</label>
-              <input name="name" value={vendor.name} onChange={handleChange} className="input input-bordered w-full rounded-xl" />
+              <input
+                name="name"
+                value={vendor.name}
+                onChange={handleChange}
+                className="input input-bordered w-full rounded-xl"
+              />
             </div>
             <div>
               <label className="label">Nom de la boutique</label>
-              <input name="shopName" value={vendor.shopName} onChange={handleChange} className="input input-bordered w-full rounded-xl" />
+              <input
+                name="shopName"
+                value={vendor.shopName}
+                onChange={handleChange}
+                className="input input-bordered w-full rounded-xl"
+              />
             </div>
             <div>
               <label className="label">Téléphone</label>
-              <input name="phoneNumber" value={vendor.phoneNumber} onChange={handleChange} className="input input-bordered w-full rounded-xl" />
+              <input
+                name="phoneNumber"
+                value={vendor.phoneNumber}
+                onChange={handleChange}
+                className="input input-bordered w-full rounded-xl"
+              />
             </div>
             <div>
               <label className="label">Adresse</label>
-              <textarea name="address" value={vendor.address} onChange={handleChange} className="textarea textarea-bordered w-full rounded-xl" rows={3} />
+              <textarea
+                name="address"
+                value={vendor.address}
+                onChange={handleChange}
+                className="textarea textarea-bordered w-full rounded-xl"
+                rows={3}
+              />
             </div>
             <div>
-  <label className="label">Description</label>
-  <textarea
-    name="description"
-    value={vendor.description || ""}
-    onChange={handleChange}
-    className="textarea textarea-bordered w-full rounded-xl"
-    rows={4}
-  />
-</div>
+              <label className="label">Description</label>
+              <textarea
+                name="description"
+                value={vendor.description || ""}
+                onChange={handleChange}
+                className="textarea textarea-bordered w-full rounded-xl"
+                rows={4}
+              />
+            </div>
 
+            <div>
+              <label className="label">Horaires</label>
+              <div className="space-y-2">
+                {days.map((day) => (
+                  <div key={day} className="flex items-center gap-2">
+                    <span className="w-20">{day}</span>
+                    <input
+                      type="time"
+                      value={vendor.schedule?.[day]?.open || ""}
+                      onChange={(e) =>
+                        handleHoursChange(day, "open", e.target.value)
+                      }
+                      className="input input-bordered w-28"
+                    />
+                    <span>-</span>
+                    <input
+                      type="time"
+                      value={vendor.schedule?.[day]?.close || ""}
+                      onChange={(e) =>
+                        handleHoursChange(day, "close", e.target.value)
+                      }
+                      className="input input-bordered w-28"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <div className="flex gap-3 mt-6">
               <button
@@ -217,7 +355,13 @@ export default function VendorProfilePage() {
                 disabled={updating}
                 className="btn btn-accent flex-1 flex items-center gap-2"
               >
-                {updating ? "Mise à jour..." : <><Save className="w-4 h-4" /> Enregistrer</>}
+                {updating ? (
+                  "Mise à jour..."
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" /> Enregistrer
+                  </>
+                )}
               </button>
             </div>
           </div>

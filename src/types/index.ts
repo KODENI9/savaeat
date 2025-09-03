@@ -17,6 +17,12 @@ export interface Vendor {
   averageRating: number;
   ratingsCount: number;
   createdAt: number;         // Date.now()
+  schedule?: {
+    [day: string]: {
+      open: string;   // ex: "08:00"
+      close: string;  // ex: "22:00"
+    };
+  };
 }
 
 export interface Client {

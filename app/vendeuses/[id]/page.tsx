@@ -3,17 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { db, auth } from "@/src/firebase/firebase";
-import {
-  doc,
-  onSnapshot,
-  Timestamp,
-} from "firebase/firestore";
+import { doc, onSnapshot, Timestamp } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import Image from "next/image";
 import Wrapper from "@/app/components/Wrapper";
 import VendorMap from "@/app/components/VendorMap";
 import Loader from "@/app/components/Loader";
-import {Review, Vendor } from "@/src/types";
+import { Review, Vendor } from "@/src/types";
 import {
   addReviewAction,
   fetchReviewsWithUsers,
@@ -40,22 +36,37 @@ export default function VendorProfilePage() {
   const [sending, setSending] = useState(false);
 
   const { _userId, userType, data, _loading } = useCurrentUser();
-  
+
+  const daysOrder = [
+    "Lundi",
+    "Mardi",
+    "Mercredi",
+    "Jeudi",
+    "Vendredi",
+    "Samedi",
+    "Dimanche",
+  ];
+
+  // Si tes horaires sont sous forme d’objet :
+  const sortedSchedule = Object.entries(vendor?.schedule || {}).sort(
+    ([dayA], [dayB]) => daysOrder.indexOf(dayA) - daysOrder.indexOf(dayB)
+  );
+
   // Charger les reviews + users
-    const loadReviews = async () => {
-      if (!vendorId) return;
-      setLoading(true);
-      try {
-        if (vendorId) {
-          const res = await fetchReviewsWithUsers(vendorId);
-          setReviews(res); // reviews avec client complet
-        }
-      } catch (error) {
-        console.error("Erreur chargement reviews:", error);
-      } finally {
-        setLoading(false);
+  const loadReviews = async () => {
+    if (!vendorId) return;
+    setLoading(true);
+    try {
+      if (vendorId) {
+        const res = await fetchReviewsWithUsers(vendorId);
+        setReviews(res); // reviews avec client complet
       }
-    };
+    } catch (error) {
+      console.error("Erreur chargement reviews:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // --- Auth listener ---
   useEffect(() => {
@@ -78,7 +89,7 @@ export default function VendorProfilePage() {
     setLoading(true);
 
     const vendorRef = doc(db, "vendors", vendorId);
-    
+
     const unsubVendor = onSnapshot(vendorRef, (snap) => {
       if (snap.exists()) {
         const data = snap.data() as Omit<Vendor, "id">; // ✅ typage fort
@@ -95,10 +106,9 @@ export default function VendorProfilePage() {
     };
   }, [vendorId]);
 
-useEffect(() => {
-  loadReviews();
-}, [vendorId]);
-
+  useEffect(() => {
+    loadReviews();
+  }, [vendorId]);
 
   const averageComputed = useMemo(() => {
     if (!reviews.length) return vendor?.averageRating ?? 0;
@@ -106,9 +116,8 @@ useEffect(() => {
     return total / reviews.length;
   }, [reviews, vendor?.averageRating]);
 
-const likedCount = vendor?.likedBy?.length || 0;
-const isLiked = userId ? vendor?.likedBy?.includes(userId) : false;
-
+  const likedCount = vendor?.likedBy?.length || 0;
+  const isLiked = userId ? vendor?.likedBy?.includes(userId) : false;
 
   // --- Like / Unlike ---
   const toggleLike = async () => {
@@ -192,9 +201,6 @@ const isLiked = userId ? vendor?.likedBy?.includes(userId) : false;
               {vendor.shopName || vendor.name}
             </h1>
             <p className="text-sm text-gray-600">{vendor.name}</p>
-            {/* {vendor.description && (
-      <p className="text-sm text-gray-500 mt-2 max-w-md">{vendor.description}</p>
-    )} */}
           </div>
         </div>
 
@@ -237,17 +243,25 @@ const isLiked = userId ? vendor?.likedBy?.includes(userId) : false;
               <b>Adresse :</b> {vendor.address || "—"}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-orange-500">⏰</span>
-            <span>
-              <b>Horaires :</b> 7h00 - 22h00
-            </span>
-          </div>
+
           <div className="flex items-center gap-2">
             <span className="text-orange-500">📞</span>
             <span>
               <b>Téléphone :</b> {vendor.phoneNumber || "—"}
             </span>
+          </div>
+          <div>
+            <h3 className="font-semibold">⏰ Horaires d'ouverture </h3>
+            <ul className="space-y-2">
+              {sortedSchedule.map(([day, hours]) => (
+                <li key={day} className="flex justify-between">
+                  <span>{day}</span>
+                  <span>
+                    {hours.open} - {hours.close}
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
